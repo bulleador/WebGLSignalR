@@ -2,6 +2,7 @@
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class AccountManager : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class AccountManager : MonoBehaviour
 
     private string GetDeviceId()
     {
-        return SystemInfo.deviceUniqueIdentifier;
+        return SystemInfo.deviceUniqueIdentifier + Random.Range(0, 1000);
     }
 
     private void OnLoginFailure(PlayFabError obj)
