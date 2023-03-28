@@ -83,6 +83,17 @@ var SignalRLib = {
         }
     },
 
+    StartOrRecoverSessionJs: function (traceParent, responseCallback) {
+        vars.responseCallback = responseCallback;
+        traceParent = vars.UTF8ToString(traceParent);
+        vars.connection.invoke("StartOrRecoverSession", {"traceParent": traceParent})
+            .then(value => {
+                value = JSON.stringify(value);
+                console.log(value);
+                vars.invokeCallback([value], vars.responseCallback);
+            }).catch(error => console.log(error));
+    },
+
     InvokeJs: function (methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, responseCallback) {
         methodName = vars.UTF8ToString(methodName);
 
@@ -173,7 +184,7 @@ var SignalRLib = {
             arg1 = vars.UTF8ToString(arg1);
             console.log("Invoking " + methodName + " with " + arg1);
             vars.connection.invoke(methodName, arg1)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
+                .then(result => vars.invokeCallback([result], vars.responseCallback), reason => console.log(reason));
         }
     },
 

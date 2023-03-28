@@ -11,9 +11,14 @@ public class AccountManager : MonoBehaviour
     {
         PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
         {
-            CustomId = SystemInfo.deviceUniqueIdentifier,
+            CustomId = GetDeviceId(),
             CreateAccount = true
         }, OnLoginSuccess, OnLoginFailure);
+    }
+
+    private string GetDeviceId()
+    {
+        return SystemInfo.deviceUniqueIdentifier;
     }
 
     private void OnLoginFailure(PlayFabError obj)

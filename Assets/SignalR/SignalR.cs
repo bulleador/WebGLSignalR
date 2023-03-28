@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Lobby.Signal;
 using Microsoft.AspNetCore.Http.Connections;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public class ConnectionEventArgs : EventArgs
@@ -99,6 +101,16 @@ public class SignalR
         }
     }
 
+    public async void StartOrRecoverSession(string traceParent, Action<StartOrRecoverSessionResponse> onResponse)
+    {
+        var result = await connection.InvokeAsync<StartOrRecoverSessionResponse>("StartOrRecoverSession", new
+        {
+            traceParent
+        });
+        
+        onResponse(result);   
+    }
+
     private static Task OnConnectionClosedEvent(Exception exception)
     {
         if (exception != null)
@@ -130,30 +142,12 @@ public class SignalR
     }
 
     #region Invoke Editor
-    public async void Invoke(string methodName, object arg1, Action<object> onResponse)
+    public async void Invoke(string methodName, string arg1, Action<string> onResponse)
     {
         Debug.Log($"Invoke arg: {arg1}");
-        var response = await connection.InvokeAsync<object>(methodName, arg1);
+        var response = await connection.InvokeAsync<string>(methodName, arg1);
         onResponse(response);
     }
-    public async void Invoke(string methodName, object arg1, object arg2) =>
-        await connection.InvokeAsync(methodName, arg1, arg2);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5, arg6);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-    public async void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10) =>
-        await connection.InvokeAsync(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
     #endregion
 
     #region On Editor
@@ -201,6 +195,21 @@ public class SignalR
     [DllImport("__Internal")]
     private static extern void ConnectJs(Action<string> connectedCallback, Action<string> disconnectedCallback);
 
+
+    #region StartOrRecoverSessionJs
+
+    [DllImport("__Internal")]
+    private static extern void StartOrRecoverSessionJs(string traceParent, Action<string> responseHandler);
+    
+    public void StartOrRecoverSession(string traceParent, Action<string> responseHandler)
+    {
+        ResponseHandler = responseHandler;
+        StartOrRecoverSessionJs(traceParent, ResponseCallback);
+    }
+
+    #endregion
+    
+
     [MonoPInvokeCallback(typeof(Action<string>))]
     private static void ConnectedCallback(string connectionId)
     {
@@ -223,65 +232,11 @@ public class SignalR
     [DllImport("__Internal")]
     private static extern void InvokeJs(string methodName, string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9, string arg10, Action<string> responseHandler);
 
-    public void Invoke(string methodName, object arg1, Action<string> responseHandler)
+    public void Invoke(string methodName, string arg1, Action<string> responseHandler)
     {
         Debug.Log($"Invoke arg: {arg1}");
         ResponseHandler = responseHandler;
         InvokeJs(methodName, arg1.ToString(), null, null, null, null, null, null, null, null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), null, null, null, null, null, null, null, null,
-            ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), null, null, null, null, null, null,
-            null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), null, null, null, null,
-            null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(), null,
-            null, null, null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(),
-            arg6.ToString(), null, null, null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(),
-            arg6.ToString(), arg7.ToString(), null, null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(),
-            arg6.ToString(), arg7.ToString(), arg8.ToString(), null, null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(),
-            arg6.ToString(), arg7.ToString(), arg8.ToString(), arg9.ToString(), null, ResponseCallback);
-    }
-    public void Invoke(string methodName, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10, Action<string> responseHandler)
-    {
-        ResponseHandler = responseHandler;
-        InvokeJs(methodName, arg1.ToString(), arg2.ToString(), arg3.ToString(), arg4.ToString(), arg5.ToString(),
-            arg6.ToString(), arg7.ToString(), arg8.ToString(), arg9.ToString(), arg10.ToString(), ResponseCallback);
     }
     
     [MonoPInvokeCallback(typeof(Action<string>))]
