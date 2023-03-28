@@ -256,7 +256,22 @@ namespace Lobby
                 foreach (var member in sameMembers)
                 {
                     var oldMember = CurrentLobby.Members.ToList().First(m => m.MemberEntity.Id == member.MemberEntity.Id);
-                    if (!oldMember.MemberData.SequenceEqual(member.MemberData))
+                    
+                    if (oldMember.MemberData == null && member.MemberData == null)
+                        continue;
+
+                    if (oldMember.MemberData == null && member.MemberData != null)
+                    {
+                        OnMemberDataUpdated?.Invoke(member);
+                        Debug.Log($"Member {member.MemberEntity.Id} updated their data");
+                    }
+                    
+                    else if (oldMember.MemberData != null && member.MemberData == null)
+                    {
+                        OnMemberDataUpdated?.Invoke(member);
+                        Debug.Log($"Member {member.MemberEntity.Id} updated their data");
+                    }
+                    else if (!oldMember.MemberData.SequenceEqual(member.MemberData))
                     {
                         OnMemberDataUpdated?.Invoke(member);
                         Debug.Log($"Member {member.MemberEntity.Id} updated their data");
