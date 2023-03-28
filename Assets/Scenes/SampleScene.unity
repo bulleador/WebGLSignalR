@@ -1225,6 +1225,7 @@ GameObject:
   - component: {fileID: 1329520318}
   - component: {fileID: 1329520317}
   - component: {fileID: 1329520316}
+  - component: {fileID: 1329520319}
   m_Layer: 0
   m_Name: LobbyIdInputField
   m_TagString: Untagged
@@ -1389,6 +1390,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1329520314}
   m_CullTransparentMesh: 1
+--- !u!114 &1329520319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1329520314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc33a39070010f94fb1c2dd721c1286d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showHtmlElement: 0
 --- !u!1 &1435818619
 GameObject:
   m_ObjectHideFlags: 0
