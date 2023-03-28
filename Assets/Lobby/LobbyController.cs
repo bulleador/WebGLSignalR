@@ -20,7 +20,26 @@ namespace Lobby
             MemberEntity = LocalEntityKey
         };
 
+        private SignalRController _signalRController;
+        private SignalRLobbyMessageHandler _signalRLobbyMessageHandler;
         private string _lobbyId;
+
+        private void Awake()
+        {
+            AccountManager.OnAuthenticated += () =>
+            {
+                _signalRLobbyMessageHandler = new SignalRLobbyMessageHandler(this);
+
+                _signalRController = GetComponent<SignalRController>();
+                _signalRController.Initialise(s =>
+                {
+                    _signalRController.AddMessageHandler("LobbyChange",
+                        _signalRLobbyMessageHandler.OnLobbyChangeMessage);
+                    _signalRController.AddSubscriptionChangeMessageHandler("LobbyChange",
+                        _signalRLobbyMessageHandler.OnLobbySubscriptionChangeMessage);
+                });
+            };
+        }
 
         [Button]
         public void CreateLobby()
@@ -40,7 +59,6 @@ namespace Lobby
             void OnLobbyCreated(CreateLobbyResult createLobbyResult)
             {
                 Debug.Log($"Lobby created. Lobby ID: {createLobbyResult.LobbyId}. Lobby connection string: {createLobbyResult.ConnectionString}");
-                
                 _lobbyId = createLobbyResult.LobbyId;
                 SubscribeToLobbyEvents(_lobbyId);
             }
@@ -94,6 +112,53 @@ namespace Lobby
             }
         }
 
+        [Button]
+        public void SetReady(bool isReady)
+        {
+            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest()
+            {
+                LobbyId = _lobbyId,
+                MemberEntity = LocalEntityKey,
+                MemberData = new Dictionary<string, string>
+                {
+                    {"Ready", isReady.ToString()}
+                },
+            }, OnLobbyUpdated, OnLobbyUpdateFailed);
+            
+            void OnLobbyUpdateFailed(PlayFabError obj)
+            {
+                Debug.LogError($"Set ready status update failed - {obj.GenerateErrorReport()}");
+            }
+
+            void OnLobbyUpdated(LobbyEmptyResult obj)
+            {
+                Debug.Log("Set ready updated");
+            }
+        }
+
+        [Button]
+        public void StartGame()
+        {
+            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest()
+            {
+                LobbyId = _lobbyId,
+                LobbyData = new Dictionary<string, string>
+                {
+                    {"GameStarted", "true"}
+                }
+            }, OnLobbyUpdated, OnLobbyUpdateFailed);
+            
+            void OnLobbyUpdateFailed(PlayFabError obj)
+            {
+                Debug.LogError($"Start game update failed - {obj.GenerateErrorReport()}");
+            }
+            
+            void OnLobbyUpdated(LobbyEmptyResult obj)
+            {
+                Debug.Log("Start game updated");
+            }
+        }
+
         private void SubscribeToLobbyEvents(string lobbyId)
         {
             PlayFabMultiplayerAPI.SubscribeToLobbyResource(new SubscribeToLobbyResourceRequest
@@ -102,7 +167,7 @@ namespace Lobby
                 EntityKey = LocalEntityKey,
                 ResourceId = lobbyId,
                 SubscriptionVersion = 1,
-                PubSubConnectionHandle = SignalRController.ConnectionHandle
+                PubSubConnectionHandle = _signalRController.ConnectionHandle
             }, OnSubscribedToLobbyEvents, OnSubscriptionToLobbyEventsFailed);
             
             void OnSubscribedToLobbyEvents(SubscribeToLobbyResourceResult subscribeToLobbyResourceResult)
