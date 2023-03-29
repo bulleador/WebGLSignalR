@@ -9,19 +9,21 @@ namespace Lobby.Signal
 {
     public class SignalRConnection
     {
-        private string NegotiateUrl => $"https://{PlayFabSettings.staticSettings.TitleId}.playfabapi.com/PubSub/Negotiate";
-        
+        private string NegotiateUrl =>
+            $"https://{PlayFabSettings.staticSettings.TitleId}.playfabapi.com/PubSub/Negotiate";
+
         private SignalR _signalR;
-        
+
         private readonly Action<Message> _onReceiveMessage;
         private readonly Action<SubscriptionChangeMessage> _onReceiveSubscriptionChangeMessage;
-        
+
         public event Action<string> OnStarted;
         public event Action OnStopped;
-        
+
         public string ConnectionHandle { get; private set; }
-        
-        public SignalRConnection(Action<Message> onReceiveMessage, Action<SubscriptionChangeMessage> onReceiveSubscriptionChangeMessage)
+
+        public SignalRConnection(Action<Message> onReceiveMessage,
+            Action<SubscriptionChangeMessage> onReceiveSubscriptionChangeMessage)
         {
             _onReceiveMessage = onReceiveMessage;
             _onReceiveSubscriptionChangeMessage = onReceiveSubscriptionChangeMessage;
@@ -67,15 +69,26 @@ namespace Lobby.Signal
             _signalR = new SignalR();
             _signalR.Init(url, accessToken);
 
+#if UNITY_EDITOR
             _signalR.On("ReceiveMessage", _onReceiveMessage);
             _signalR.On("ReceiveSubscriptionChangeMessage", _onReceiveSubscriptionChangeMessage);
+#elif UNITY_WEBGL
+            _signalR.On("ReceiveMessage",
+                json => { _onReceiveMessage.Invoke(JsonConvert.DeserializeObject<Message>(json)); });
+            _signalR.On("ReceiveSubscriptionChangeMessage",
+                json =>
+                {
+                    _onReceiveSubscriptionChangeMessage.Invoke(
+                        JsonConvert.DeserializeObject<SubscriptionChangeMessage>(json));
+                });
+#endif
 
             _signalR.ConnectionStarted += delegate { StartOrRecoverSession(); };
             _signalR.ConnectionClosed += delegate { OnStopped?.Invoke(); };
 
             _signalR.Connect();
         }
-        
+
         private void StartOrRecoverSession()
         {
             Debug.Log("Starting or recovering session...");

@@ -5,15 +5,7 @@ var SignalRLib = {
         lastConnectionId: '',
         connectedCallback: null,
         disconnectedCallback: null,
-        handlerCallback1: null,
-        handlerCallback2: null,
-        handlerCallback3: null,
-        handlerCallback4: null,
-        handlerCallback5: null,
-        handlerCallback6: null,
-        handlerCallback7: null,
-        handlerCallback8: null,
-        responseCallback: null,
+        handlerCallback: null,
         UTF8ToString: function (arg) {
             return (typeof Pointer_stringify === 'undefined') ? UTF8ToString(arg) : Pointer_stringify(arg);
         },
@@ -94,144 +86,23 @@ var SignalRLib = {
             }).catch(error => console.log(error));
     },
 
-    InvokeJs: function (methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, responseCallback) {
+    InvokeJs: function (methodName, arg1) {
         methodName = vars.UTF8ToString(methodName);
 
-        vars.responseCallback = responseCallback;
-
-        if (arg1 && arg2 && arg3 && arg4 && arg5 && arg6 && arg7 && arg8 && arg9 && arg10) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            arg6 = vars.UTF8ToString(arg6);
-            arg7 = vars.UTF8ToString(arg7);
-            arg8 = vars.UTF8ToString(arg8);
-            arg9 = vars.UTF8ToString(arg9);
-            arg10 = vars.UTF8ToString(arg10);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4 && arg5 && arg6 && arg7 && arg8 && arg9) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            arg6 = vars.UTF8ToString(arg6);
-            arg7 = vars.UTF8ToString(arg7);
-            arg8 = vars.UTF8ToString(arg8);
-            arg9 = vars.UTF8ToString(arg9);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4 && arg5 && arg6 && arg7 && arg8) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            arg6 = vars.UTF8ToString(arg6);
-            arg7 = vars.UTF8ToString(arg7);
-            arg8 = vars.UTF8ToString(arg8);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4 && arg5 && arg6 && arg7) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            arg6 = vars.UTF8ToString(arg6);
-            arg7 = vars.UTF8ToString(arg7);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4 && arg5 && arg6) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            arg6 = vars.UTF8ToString(arg6);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5, arg6)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4 && arg5) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            arg5 = vars.UTF8ToString(arg5);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4, arg5)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3 && arg4) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            arg4 = vars.UTF8ToString(arg4);
-            vars.connection.invoke(methodName, arg1, arg2, arg3, arg4)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2 && arg3) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            arg3 = vars.UTF8ToString(arg3);
-            vars.connection.invoke(methodName, arg1, arg2, arg3)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1 && arg2) {
-            arg1 = vars.UTF8ToString(arg1);
-            arg2 = vars.UTF8ToString(arg2);
-            vars.connection.invoke(methodName, arg1, arg2)
-                .then(result => vars.responseCallback(result), reason => console.log(reason));
-        } else if (arg1) {
-            arg1 = vars.UTF8ToString(arg1);
-            console.log("Invoking " + methodName + " with " + arg1);
-            vars.connection.invoke(methodName, arg1)
-                .then(result => vars.invokeCallback([result], vars.responseCallback), reason => console.log(reason));
-        }
+        arg1 = vars.UTF8ToString(arg1);
+        console.log("Invoking " + methodName + " with " + arg1);
+        vars.connection.invoke(methodName, arg1)
+            .catch(error => console.error(error));
     },
 
     OnJs: function (methodName, argCount, callback) {
         methodName = vars.UTF8ToString(methodName);
-        argCount = Number.parseInt(vars.UTF8ToString(argCount));
-        if (argCount === 1) {
-            vars.handlerCallback1 = callback;
-            vars.connection.on(methodName, function (arg1) {
-                vars.invokeCallback([methodName, arg1], vars.handlerCallback1);
-            });
-        } else if (argCount === 2) {
-            vars.handlerCallback2 = callback;
-            vars.connection.on(methodName, function (arg1, arg2) {
-                vars.invokeCallback([methodName, arg1, arg2], vars.handlerCallback2);
-            });
-        } else if (argCount === 3) {
-            vars.handlerCallback3 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3], vars.handlerCallback3);
-            });
-        } else if (argCount === 4) {
-            vars.handlerCallback4 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3, arg4) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3, arg4], vars.handlerCallback4);
-            });
-        } else if (argCount === 5) {
-            vars.handlerCallback5 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3, arg4, arg5) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3, arg4, arg5], vars.handlerCallback5);
-            });
-        } else if (argCount === 6) {
-            vars.handlerCallback6 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3, arg4, arg5, arg6) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3, arg4, arg5, arg6], vars.handlerCallback6);
-            });
-        } else if (argCount === 7) {
-            vars.handlerCallback7 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7], vars.handlerCallback7);
-            });
-        } else if (argCount === 8) {
-            vars.handlerCallback8 = callback;
-            vars.connection.on(methodName, function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-                vars.invokeCallback([methodName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8], vars.handlerCallback8);
-            });
-        }
+
+        vars.handlerCallback = callback;
+        vars.connection.on(methodName, function (arg1) {
+            console.log(arg1);
+            vars.invokeCallback([methodName, arg1], vars.handlerCallback);
+        });
     }
 };
 
