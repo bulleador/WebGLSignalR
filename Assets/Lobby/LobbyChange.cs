@@ -4,10 +4,8 @@ namespace Lobby
 {
     public class LobbyChange
     {
-        [JsonProperty("changeNumber")]
-        public int ChangeNumber { get; set; }
-        
-        [JsonProperty("memberToMerge")]
-        public LobbyMember AddedMember { get; set; }
+        [JsonProperty("changeNumber")] public int ChangeNumber { get; set; }
+
+        [JsonProperty("memberToMerge")] public LobbyMember AddedMember { get; set; }
     }
 }

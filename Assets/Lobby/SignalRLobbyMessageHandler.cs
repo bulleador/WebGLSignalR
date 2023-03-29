@@ -22,7 +22,7 @@ namespace Lobby
 
         public void OnLobbySubscriptionChangeMessage(SubscriptionChangeMessage message)
         {
-            Debug.Log($"Lobby subscription change message received. Status: {message.Status}");
+            Debug.Log($"Lobby subscription change message received. Status: {message}");
         }
     }
 }
