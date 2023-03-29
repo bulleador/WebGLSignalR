@@ -62,7 +62,7 @@ public class LobbyMemberEntryUI : MonoBehaviour
     {
         displayNameText.text = Member.MemberEntity.Id;
         ownerText.gameObject.SetActive(Lobby.LobbyOwner.Id == Member.MemberEntity.Id);
-        kickButton.gameObject.SetActive(Lobby.LobbyOwner.Id != Member.MemberEntity.Id);
+        kickButton.gameObject.SetActive(Lobby.IsOwner && Lobby.LobbyOwner.Id != Member.MemberEntity.Id);
     }
 
 }

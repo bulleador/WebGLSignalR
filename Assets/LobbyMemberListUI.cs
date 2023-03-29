@@ -20,12 +20,21 @@ public class LobbyMemberListUI : MonoBehaviour
         lobbyController.OnLobbyMemberAdded += OnMemberAdded;
         lobbyController.OnLobbyMemberRemoved += OnMemberRemoved;
         lobbyController.OnLobbyMemberDataChanged += OnMemberDataChanged;
+        lobbyController.OnLobbyLeft += OnLobbyLeft;
     }
+
+
     private void OnDisable()
     {
         lobbyController.OnLobbyMemberAdded -= OnMemberAdded;
         lobbyController.OnLobbyMemberRemoved -= OnMemberRemoved;
         lobbyController.OnLobbyMemberDataChanged -= OnMemberDataChanged;
+        lobbyController.OnLobbyLeft -= OnLobbyLeft;
+    }
+    
+    private void OnLobbyLeft()
+    {
+        Clear();
     }
     
     private void Clear()

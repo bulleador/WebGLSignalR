@@ -154,7 +154,9 @@ namespace Lobby
         {
             _initialised = false;
             LobbyId = null;
-
+            LobbyOwner = null;
+            LobbyMembers.Clear();
+            LobbyData.Clear();
             // TODO _signalRController.Dispose();
         }
 

@@ -7,7 +7,7 @@ namespace Lobby
     {
         public T Convert<T>(Message message)
         {
-            var payload = message.Payload;
+            var payload = ToJson(message);
             return Convert<T>(payload);
         }
 
