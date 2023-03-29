@@ -6,6 +6,7 @@ var SignalRLib = {
         connectedCallback: null,
         disconnectedCallback: null,
         handlerCallback: null,
+        responseCallback: null,
         UTF8ToString: function (arg) {
             return (typeof Pointer_stringify === 'undefined') ? UTF8ToString(arg) : Pointer_stringify(arg);
         },
@@ -99,9 +100,10 @@ var SignalRLib = {
         methodName = vars.UTF8ToString(methodName);
 
         vars.handlerCallback = callback;
-        vars.connection.on(methodName, function (arg1) {
-            console.log(arg1);
-            vars.invokeCallback([methodName, arg1], vars.handlerCallback);
+        vars.connection.on(methodName, function (arg) {
+            arg = JSON.stringify(arg);
+            console.log(arg);
+            vars.invokeCallback([methodName, arg], vars.handlerCallback);
         });
     }
 };
