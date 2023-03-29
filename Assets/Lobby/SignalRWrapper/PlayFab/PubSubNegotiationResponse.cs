@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Lobby.SignalR.PlayFab
+namespace Lobby.SignalRWrapper.PlayFab
 {
     public class PubSubNegotiationResponse
     {

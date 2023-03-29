@@ -3,13 +3,13 @@
 #endif
 
 #if TMP_WEBGL_SUPPORT
-using UnityEngine;
-using TMPro;
-using WebGLSupport.Detail;
-using UnityEngine.UI;
 using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using WebGLSupport.WebGLInput.Detail;
 
-namespace WebGLSupport
+namespace WebGLSupport.WebGLInput.Wrapper
 {
     /// <summary>
     /// Wrapper for TMPro.TMP_InputField

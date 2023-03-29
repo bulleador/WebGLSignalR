@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
-namespace WebGLSupport
+namespace WebGLSupport.WebGLInput.Wrapper
 {
     public enum ContentType
     {

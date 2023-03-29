@@ -2,16 +2,18 @@
 #define TMP_WEBGL_SUPPORT
 #endif
 
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
 using System;
-using AOT;
-using System.Runtime.InteropServices; // for DllImport
 using System.Collections;
+using System.Collections.Generic;
+using AOT;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using WebGLSupport.WebGLInput.Mobile;
+using WebGLSupport.WebGLInput.Wrapper;
+// for DllImport
 
-namespace WebGLSupport
+namespace WebGLSupport.WebGLInput
 {
     internal class WebGLInputPlugin
     {
@@ -125,7 +127,7 @@ namespace WebGLSupport
         public IInputField input;
         bool blurBlock = false;
 
-        [TooltipAttribute("show input element on canvas. this will make you select text by drag.")]
+        [Tooltip("show input element on canvas. this will make you select text by drag.")]
         public bool showHtmlElement = false;
 
         private IInputField Setup()
@@ -207,7 +209,7 @@ namespace WebGLSupport
                 WebGLInputPlugin.WebGLInputSetSelectionRange(id, 0, input.text.Length);
             }
 
-            WebGLWindow.OnBlurEvent += OnWindowBlur;
+            WebGLWindow.WebGLWindow.OnBlurEvent += OnWindowBlur;
         }
 
         void OnWindowBlur()
@@ -260,7 +262,7 @@ namespace WebGLSupport
             input.DeactivateInputField();
             instances.Remove(id);
             id = -1;    // reset id to -1;
-            WebGLWindow.OnBlurEvent -= OnWindowBlur;
+            WebGLWindow.WebGLWindow.OnBlurEvent -= OnWindowBlur;
         }
 
         [MonoPInvokeCallback(typeof(Action<int>))]

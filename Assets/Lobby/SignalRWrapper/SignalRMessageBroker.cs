@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lobby.SignalR.Messages;
+using Lobby.SignalRWrapper.Messages;
 using UnityEngine;
 
-namespace Lobby.SignalR
+namespace Lobby.SignalRWrapper
 {
-    internal class SignalRMessageBroker
+    public class SignalRMessageBroker
     {
         private readonly List<MessageHandler> _messageHandlers = new();
         private readonly List<SubscriptionChangeMessageHandler> _subscriptionChangeMessageHandlers = new();

@@ -1,33 +1,33 @@
 ﻿using System;
-using Lobby.SignalR.Messages;
-using Lobby.SignalR.PlayFab;
+using Lobby.SignalRWrapper.Messages;
+using Lobby.SignalRWrapper.PlayFab;
 using Newtonsoft.Json;
 using PlayFab;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Lobby.SignalR
+namespace Lobby.SignalRWrapper
 {
     public class SignalRConnection
     {
         private string NegotiateUrl =>
             $"https://{PlayFabSettings.staticSettings.TitleId}.playfabapi.com/PubSub/Negotiate";
 
-        private global::SignalR _signalR;
+        private global::SignalR.SignalR _signalR;
 
         private readonly Action<Message> _onReceiveMessage;
         private readonly Action<SubscriptionChangeMessage> _onReceiveSubscriptionChangeMessage;
+        
+        private readonly SignalRMessageBroker _messageBroker;
 
         public event Action<string> OnStarted;
         public event Action OnStopped;
 
         public string ConnectionHandle { get; private set; }
 
-        public SignalRConnection(Action<Message> onReceiveMessage,
-            Action<SubscriptionChangeMessage> onReceiveSubscriptionChangeMessage)
+        public SignalRConnection(SignalRMessageBroker messageBroker)
         {
-            _onReceiveMessage = onReceiveMessage;
-            _onReceiveSubscriptionChangeMessage = onReceiveSubscriptionChangeMessage;
+            _messageBroker = messageBroker;
         }
 
         public void Start()
@@ -67,20 +67,24 @@ namespace Lobby.SignalR
         {
             Debug.Log("Connecting to SignalR...");
 
-            _signalR = new global::SignalR();
+            _signalR = new global::SignalR.SignalR();
             _signalR.Init(url, accessToken);
 
 #if UNITY_EDITOR
-            _signalR.On("ReceiveMessage", _onReceiveMessage);
-            _signalR.On("ReceiveSubscriptionChangeMessage", _onReceiveSubscriptionChangeMessage);
+            _signalR.On<Message>("ReceiveMessage", _messageBroker.OnMessage);
+            _signalR.On<SubscriptionChangeMessage>("ReceiveSubscriptionChangeMessage", _messageBroker.OnSubscriptionChangeMessage);
 #elif UNITY_WEBGL
             _signalR.On("ReceiveMessage",
-                json => { _onReceiveMessage.Invoke(JsonConvert.DeserializeObject<Message>(json)); });
+                json =>
+                {
+                    var message = JsonConvert.DeserializeObject<Message>(json);
+                    _messageBroker.OnMessage(message);
+                });
             _signalR.On("ReceiveSubscriptionChangeMessage",
                 json =>
                 {
-                    _onReceiveSubscriptionChangeMessage.Invoke(
-                        JsonConvert.DeserializeObject<SubscriptionChangeMessage>(json));
+                    var message = JsonConvert.DeserializeObject<SubscriptionChangeMessage>(json);
+                    _messageBroker.OnSubscriptionChangeMessage(message);
                 });
 #endif
 

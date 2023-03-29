@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using WebGLSupport.Detail;
+using WebGLSupport.WebGLInput.Detail;
 
-namespace WebGLSupport
+namespace WebGLSupport.WebGLInput.Wrapper
 {
     /// <summary>
     /// Wrapper for UnityEngine.UI.InputField

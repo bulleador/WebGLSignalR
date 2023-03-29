@@ -1,4 +1,4 @@
-﻿using Lobby.SignalR.Messages;
+﻿using Lobby.SignalRWrapper.Messages;
 using Newtonsoft.Json;
 
 namespace Lobby

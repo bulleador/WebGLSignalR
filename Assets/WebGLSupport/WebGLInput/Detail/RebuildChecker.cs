@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using WebGLSupport.WebGLInput.Wrapper;
 
-namespace WebGLSupport.Detail
+namespace WebGLSupport.WebGLInput.Detail
 {
     public class RebuildChecker
     {

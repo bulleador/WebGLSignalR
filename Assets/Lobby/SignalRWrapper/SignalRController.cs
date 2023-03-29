@@ -1,8 +1,8 @@
 ﻿using System;
-using Lobby.SignalR.Messages;
+using Lobby.SignalRWrapper.Messages;
 using UnityEngine;
 
-namespace Lobby.SignalR
+namespace Lobby.SignalRWrapper
 {
     public class SignalRController : MonoBehaviour
     {
@@ -15,7 +15,7 @@ namespace Lobby.SignalR
         {
             _messageBroker = new SignalRMessageBroker();
             
-            _signalR = new SignalRConnection(_messageBroker.OnMessage, _messageBroker.OnSubscriptionChangeMessage);
+            _signalR = new SignalRConnection(_messageBroker);
             _signalR.Start();
             _signalR.OnStarted += delegate(string connectionHandle) { onSessionStarted?.Invoke(connectionHandle); };
         }
@@ -32,7 +32,7 @@ namespace Lobby.SignalR
         
         private void OnDestroy()
         {
-            _signalR.Stop();
+            _signalR?.Stop();
         }
     }
 }

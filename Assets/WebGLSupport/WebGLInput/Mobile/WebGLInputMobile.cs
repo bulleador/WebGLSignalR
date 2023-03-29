@@ -1,12 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using AOT;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using System.Runtime.InteropServices; // for DllImport
-using AOT;
-using System;
+// for DllImport
 
-namespace WebGLSupport
+namespace WebGLSupport.WebGLInput.Mobile
 {
     class WebGLInputMobilePlugin
     {

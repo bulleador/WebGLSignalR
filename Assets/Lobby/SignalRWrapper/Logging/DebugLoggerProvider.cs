@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Lobby.SignalR.Logging
+namespace Lobby.SignalRWrapper.Logging
 {
     internal class DebugLoggerProvider : ILoggerProvider
     {

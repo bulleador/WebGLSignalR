@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using EasyButtons;
-using Lobby.SignalR;
+using Lobby.SignalRWrapper;
 using PlayFab;
 using PlayFab.MultiplayerModels;
 using UnityEngine;
@@ -11,6 +10,8 @@ namespace Lobby
 {
     public class LobbyController : MonoBehaviour
     {
+        [SerializeField] private bool debug;
+
         private static EntityKey LocalEntityKey => new()
         {
             Id = PlayFabSettings.staticPlayer.EntityId,
@@ -38,6 +39,10 @@ namespace Lobby
         public event Action<Dictionary<string, string>> OnLobbyDataChanged;
         public event Action<LobbyMember> OnLobbyMemberDataChanged;
 
+        public bool IsOwner => InLobby && LobbyOwner.Id == LocalEntityKey.Id;
+        public bool InLobby => !string.IsNullOrEmpty(LobbyId);
+
+
         private SignalRController _signalRController;
         private SignalRLobbyMessageHandler _signalRLobbyMessageHandler;
 
@@ -45,7 +50,7 @@ namespace Lobby
         {
             AccountManager.OnAuthenticated += () =>
             {
-                _signalRLobbyMessageHandler = new SignalRLobbyMessageHandler(this);
+                _signalRLobbyMessageHandler = new SignalRLobbyMessageHandler(this, true);
 
                 _signalRController = GetComponent<SignalRController>();
                 _signalRController.Initialise(s =>
@@ -58,11 +63,12 @@ namespace Lobby
             };
         }
 
-        [Button]
         public void CreateLobby()
         {
-            Debug.Log("Creating lobby...");
+            if (InLobby)
+                throw new Exception("Already in a lobby");
 
+            Debug.Log("Creating lobby...");
             PlayFabMultiplayerAPI.CreateLobby(new CreateLobbyRequest
             {
                 Owner = LocalEntityKey,
@@ -91,9 +97,11 @@ namespace Lobby
             }
         }
 
-        [Button]
         public void JoinLobby(string connectionString)
         {
+            if (InLobby)
+                throw new Exception("Already in a lobby");
+
             PlayFabMultiplayerAPI.JoinLobby(new JoinLobbyRequest
             {
                 MemberEntity = LocalEntityKey,
@@ -117,10 +125,12 @@ namespace Lobby
             }
         }
 
-        [Button]
         public void LeaveLobby()
         {
-            PlayFabMultiplayerAPI.LeaveLobby(new LeaveLobbyRequest()
+            if (!InLobby)
+                throw new Exception("Not in a lobby");
+            
+            PlayFabMultiplayerAPI.LeaveLobby(new LeaveLobbyRequest
             {
                 LobbyId = LobbyId,
                 MemberEntity = LocalEntityKey
@@ -129,20 +139,34 @@ namespace Lobby
             void OnLobbyLeft(LobbyEmptyResult lobbyEmptyResult)
             {
                 Debug.Log("Left lobby");
-
-                this.OnLobbyLeft?.Invoke();
             }
 
             void OnLobbyLeaveFailed(PlayFabError error)
             {
                 Debug.LogError($"Lobby leave failed - {error.GenerateErrorReport()}");
             }
+
+            Dispose();
+            this.OnLobbyLeft?.Invoke();
         }
 
-        [Button]
+        private void Dispose()
+        {
+            _initialised = false;
+            LobbyId = null;
+
+            // TODO _signalRController.Dispose();
+        }
+
         public void SetReady(bool isReady)
         {
-            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest()
+            if (!InLobby)
+                throw new Exception("Not in a lobby");
+
+            if (IsOwner)
+                throw new Exception("Lobby owner cannot set ready status");
+
+            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest
             {
                 LobbyId = LobbyId,
                 MemberEntity = LocalEntityKey,
@@ -163,10 +187,12 @@ namespace Lobby
             }
         }
 
-        [Button]
         public void StartGame()
         {
-            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest()
+            if (!IsOwner)
+                throw new Exception("Not a lobby owner");
+
+            PlayFabMultiplayerAPI.UpdateLobby(new UpdateLobbyRequest
             {
                 LobbyId = LobbyId,
                 LobbyData = new Dictionary<string, string>
@@ -186,23 +212,54 @@ namespace Lobby
             }
         }
 
-        private Queue<LobbyChange> _queuedChanges = new();
+        public void KickMember(LobbyMember member, bool preventRejoin = false)
+        {
+            if (!IsOwner)
+                throw new Exception("Not a lobby owner");
+
+            PlayFabMultiplayerAPI.RemoveMember(new RemoveMemberFromLobbyRequest
+            {
+                LobbyId = LobbyId,
+                MemberEntity = member.MemberEntity,
+                PreventRejoin = preventRejoin
+            }, OnLobbyUpdated, OnLobbyUpdateFailed);
+
+            void OnLobbyUpdateFailed(PlayFabError obj)
+            {
+                Debug.LogError($"Kick member update failed - {obj.GenerateErrorReport()}");
+            }
+
+            void OnLobbyUpdated(LobbyEmptyResult obj)
+            {
+                Debug.Log("Kick member updated");
+            }
+        }
+
+        private readonly Queue<LobbyChange> _queuedChanges = new();
         private bool _initialised;
 
         private void InitialiseLobby()
         {
-            PlayFabMultiplayerAPI.GetLobby(new GetLobbyRequest()
+            PlayFabMultiplayerAPI.GetLobby(new GetLobbyRequest
             {
                 LobbyId = LobbyId,
             }, result =>
             {
-                LobbyData = result.Lobby.LobbyData;
-                LobbyMembers = result.Lobby.Members.Select(m => new LobbyMember(m)).ToList();
-                LobbyOwner = result.Lobby.Owner;
+                LobbyData = result.Lobby.LobbyData ?? new Dictionary<string, string>();
+                LobbyMembers = result.Lobby.Members.Select(m => new LobbyMember(m)).ToList() ?? new List<LobbyMember>();
+                LobbyOwner = result.Lobby.Owner ?? new EntityKey();
 
-                ApplyQueuedChanges();
+                OnLobbyDataChanged?.Invoke(LobbyData);
+                foreach (var member in LobbyMembers)
+                {
+                    OnLobbyMemberAdded?.Invoke(member);
+                    OnLobbyMemberDataChanged?.Invoke(member);
+                }
+
+                OnLobbyOwnerChanged?.Invoke(LobbyOwner);
 
                 _initialised = true;
+                ApplyQueuedChanges();
             }, error => { Debug.LogError($"Failed to get lobby data - {error.GenerateErrorReport()}"); });
         }
 
@@ -241,17 +298,23 @@ namespace Lobby
         {
             var sortedByChangeNumber = changes.OrderBy(x => x.ChangeNumber);
 
-            foreach (var change in sortedByChangeNumber) 
+            foreach (var change in sortedByChangeNumber)
                 ApplyChange(change);
         }
 
         private void ApplyChange(LobbyChange change)
         {
-            if (_initialised)
+            if (!_initialised)
             {
+                if (debug)
+                    Debug.Log($"Enqueuing change {change.ChangeNumber} - {change.ChangeType}");
+
                 _queuedChanges.Enqueue(change);
                 return;
             }
+
+            if (debug)
+                Debug.Log($"Applying change {change.ChangeNumber} - {change.ChangeType}");
 
             switch (change.ChangeType)
             {

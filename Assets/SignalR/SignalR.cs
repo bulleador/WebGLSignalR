@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Threading.Tasks;
-using Lobby.SignalR.PlayFab;
+using Lobby.SignalRWrapper.PlayFab;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
 
+namespace SignalR
+{
 #if !UNITY_EDITOR
 using AOT;
 using System.Collections.Generic;
@@ -12,157 +14,157 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 #endif
 
-public class ConnectionEventArgs : EventArgs
-{
-    public string ConnectionId { get; set; }
-}
-
-public class SignalR
-{
-    private static SignalR instance;
-
-    public SignalR()
+    public class ConnectionEventArgs : EventArgs
     {
-        instance = this;
+        public string ConnectionId { get; set; }
     }
 
-    private static void OnConnectionStarted(string connectionId)
+    public class SignalR
     {
-        var args = new ConnectionEventArgs
+        private static SignalR instance;
+
+        public SignalR()
         {
-            ConnectionId = connectionId
-        };
-        instance.ConnectionStarted?.Invoke(instance, args);
-    }
+            instance = this;
+        }
 
-    public event EventHandler<ConnectionEventArgs> ConnectionStarted;
-
-    private static void OnConnectionClosed(string connectionId)
-    {
-        var args = new ConnectionEventArgs
+        private static void OnConnectionStarted(string connectionId)
         {
-            ConnectionId = connectionId
-        };
-        instance.ConnectionClosed?.Invoke(instance, args);
-    }
+            var args = new ConnectionEventArgs
+            {
+                ConnectionId = connectionId
+            };
+            instance.ConnectionStarted?.Invoke(instance, args);
+        }
 
-    public event EventHandler<ConnectionEventArgs> ConnectionClosed;
+        public event EventHandler<ConnectionEventArgs> ConnectionStarted;
+
+        private static void OnConnectionClosed(string connectionId)
+        {
+            var args = new ConnectionEventArgs
+            {
+                ConnectionId = connectionId
+            };
+            instance.ConnectionClosed?.Invoke(instance, args);
+        }
+
+        public event EventHandler<ConnectionEventArgs> ConnectionClosed;
 
 #if UNITY_EDITOR || PLATFORM_SUPPORTS_MONO
-    private HubConnection connection;
-    private static string lastConnectionId;
+        private HubConnection connection;
+        private static string lastConnectionId;
 
-    public void Init(string url, string accessToken)
-    {
-        try
+        public void Init(string url, string accessToken)
         {
-            connection = new HubConnectionBuilder()
-                .WithUrl(url, options =>
-                {
-                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
-                    options.Transports = HttpTransportType.LongPolling;
-                })
-                .Build();
+            try
+            {
+                connection = new HubConnectionBuilder()
+                    .WithUrl(url, options =>
+                    {
+                        options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                        options.Transports = HttpTransportType.LongPolling;
+                    })
+                    .Build();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            }
         }
-        catch (Exception ex)
+
+        public async void Connect()
         {
-            Debug.LogError(ex.Message);
+            try
+            {
+                await connection.StartAsync();
+
+                lastConnectionId = connection.ConnectionId;
+
+                connection.Closed -= OnConnectionClosedEvent;
+                connection.Reconnecting -= OnConnectionReconnectingEvent;
+                connection.Reconnected -= OnConnectionReconnectedEvent;
+
+                connection.Closed += OnConnectionClosedEvent;
+                connection.Reconnecting += OnConnectionReconnectingEvent;
+                connection.Reconnected += OnConnectionReconnectedEvent;
+
+                OnConnectionStarted(lastConnectionId);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            }
         }
-    }
 
-    public async void Connect()
-    {
-        try
+        public async void Stop()
         {
-            await connection.StartAsync();
+            try
+            {
+                await connection.StopAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
 
-            lastConnectionId = connection.ConnectionId;
+        public async void StartOrRecoverSession(string traceParent, Action<StartOrRecoverSessionResponse> onResponse)
+        {
+            var result = await connection.InvokeAsync<StartOrRecoverSessionResponse>("StartOrRecoverSession", new
+            {
+                traceParent
+            });
 
-            connection.Closed -= OnConnectionClosedEvent;
-            connection.Reconnecting -= OnConnectionReconnectingEvent;
-            connection.Reconnected -= OnConnectionReconnectedEvent;
+            onResponse(result);
+        }
 
-            connection.Closed += OnConnectionClosedEvent;
-            connection.Reconnecting += OnConnectionReconnectingEvent;
-            connection.Reconnected += OnConnectionReconnectedEvent;
+        private static Task OnConnectionClosedEvent(Exception exception)
+        {
+            if (exception != null)
+            {
+                Debug.LogError(exception.Message);
+            }
+
+            OnConnectionClosed(lastConnectionId);
+
+            return Task.CompletedTask;
+        }
+
+        private static Task OnConnectionReconnectingEvent(Exception exception)
+        {
+            Debug.Log($"Connection started reconnecting due to an error: {exception.Message}");
+
+            return Task.CompletedTask;
+        }
+
+        private static Task OnConnectionReconnectedEvent(string connectionId)
+        {
+            Debug.Log($"Connection successfully reconnected. The ConnectionId is now: {connectionId}");
+
+            lastConnectionId = connectionId;
 
             OnConnectionStarted(lastConnectionId);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex.Message);
-        }
-    }
 
-    public async void Stop()
-    {
-        try
-        {
-            await connection.StopAsync();
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e);
-        }
-    }
-
-    public async void StartOrRecoverSession(string traceParent, Action<StartOrRecoverSessionResponse> onResponse)
-    {
-        var result = await connection.InvokeAsync<StartOrRecoverSessionResponse>("StartOrRecoverSession", new
-        {
-            traceParent
-        });
-
-        onResponse(result);
-    }
-
-    private static Task OnConnectionClosedEvent(Exception exception)
-    {
-        if (exception != null)
-        {
-            Debug.LogError(exception.Message);
+            return Task.CompletedTask;
         }
 
-        OnConnectionClosed(lastConnectionId);
+        #region Invoke Editor
 
-        return Task.CompletedTask;
-    }
+        public async void Invoke(string methodName, string arg1, Action<string> onResponse)
+        {
+            Debug.Log($"Invoke arg: {arg1}");
+            var response = await connection.InvokeAsync<string>(methodName, arg1);
+            onResponse(response);
+        }
 
-    private static Task OnConnectionReconnectingEvent(Exception exception)
-    {
-        Debug.Log($"Connection started reconnecting due to an error: {exception.Message}");
+        #endregion
 
-        return Task.CompletedTask;
-    }
+        #region On Editor
 
-    private static Task OnConnectionReconnectedEvent(string connectionId)
-    {
-        Debug.Log($"Connection successfully reconnected. The ConnectionId is now: {connectionId}");
+        public void On<T1>(string methodName, Action<T1> handler) =>
+            connection.On(methodName, (T1 arg1) => handler.Invoke(arg1));
 
-        lastConnectionId = connectionId;
-
-        OnConnectionStarted(lastConnectionId);
-
-        return Task.CompletedTask;
-    }
-
-    #region Invoke Editor
-
-    public async void Invoke(string methodName, string arg1, Action<string> onResponse)
-    {
-        Debug.Log($"Invoke arg: {arg1}");
-        var response = await connection.InvokeAsync<string>(methodName, arg1);
-        onResponse(response);
-    }
-
-    #endregion
-
-    #region On Editor
-
-    public void On<T1>(string methodName, Action<T1> handler) =>
-        connection.On(methodName, (T1 arg1) => handler.Invoke(arg1));
-
-    #endregion
+        #endregion
 
 #elif UNITY_WEBGL
     #region Init JS
@@ -276,4 +278,5 @@ public class SignalR
 #error PLATFORM NOT SUPPORTED
 
 #endif
+    }
 }

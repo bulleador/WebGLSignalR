@@ -1,0 +1,68 @@
+using System;
+using System.Text.RegularExpressions;
+using Lobby;
+using TMPro;
+using UnityEngine;
+
+public class LobbyConsoleUI : MonoBehaviour
+{
+    [SerializeField] private LobbyController lobbyController;
+
+    [SerializeField] private TMP_InputField unityLog;
+    [SerializeField] private TMP_InputField lobbyLog;
+
+    private void OnEnable()
+    {
+        Application.logMessageReceivedThreaded += OnLogMessageReceived;
+
+        lobbyController.OnLobbyCreated += () => LogLobbyLocal("Lobby created");
+        lobbyController.OnLobbyLeft += () => LogLobbyLocal("Lobby left");
+        lobbyController.OnLobbyJoined += () => LogLobby("Lobby joined");
+
+        lobbyController.OnLobbyMemberAdded += member => LogLobby($"Member added: {member.MemberEntity.Id}");
+        lobbyController.OnLobbyMemberRemoved += member => LogLobby($"Member removed: {member.MemberEntity.Id}");
+        lobbyController.OnLobbyMemberDataChanged += member => LogLobby($"Member data changed: {member.MemberEntity.Id}");
+        lobbyController.OnLobbyOwnerChanged += owner => LogLobby($"Owner changed: {owner.Id}");
+        lobbyController.OnLobbyDataChanged += data => LogLobby($"Lobby data changed: {string.Join(",", data.Keys)}");
+    }
+
+    private void OnLogMessageReceived(string condition, string stacktrace, LogType type)
+    {
+        var color = type switch
+        {
+            LogType.Error => Color.red,
+            LogType.Exception => Color.red,
+            LogType.Warning => Color.yellow,
+            _ => Color.gray
+        };
+
+        LogUnity(condition, color);
+    }
+
+    private void LogLobbyLocal(string message)
+    {
+        message = FormatMessage(message, "Lobby (Local)", Color.cyan);
+        lobbyLog.text += message;
+    }
+
+    private void LogLobby(string message, Color? color = null)
+    {
+        message = FormatMessage(message, "Lobby", color ?? Color.green);
+        lobbyLog.text += message;
+    }
+
+    private void LogUnity(string message, Color? color = null)
+    {
+        message = FormatMessage(message, "Unity", color ?? Color.white);
+        unityLog.text += message;
+    }
+
+    private string FormatMessage(string message, string tag, Color color)
+    {
+        var intended = Regex.Replace(message, $"{Environment.NewLine}", $"\t{Environment.NewLine}");
+        var tagged = $"[{DateTime.Now.ToShortTimeString()}] [{tag}] {intended}\n";
+        var colored = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{tagged}</color>";
+
+        return colored;
+    }
+}

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Lobby.SignalR.Logging
+namespace Lobby.SignalRWrapper.Logging
 {
     internal class DebugLogger : ILogger
     {

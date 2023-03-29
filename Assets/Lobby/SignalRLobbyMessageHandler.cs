@@ -1,4 +1,4 @@
-﻿using Lobby.SignalR.Messages;
+﻿using Lobby.SignalRWrapper.Messages;
 using UnityEngine;
 
 namespace Lobby

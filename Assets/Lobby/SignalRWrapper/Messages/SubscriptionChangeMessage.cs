@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Lobby.SignalR.Messages
+namespace Lobby.SignalRWrapper.Messages
 {
     public class SubscriptionChangeMessage
     {
