@@ -21,6 +21,7 @@ var SignalRLib = {
                 messages.push(buffer);
                 sig += 'i';
             }
+
             if (typeof Runtime === 'undefined') {
                 dynCall(sig, callback, messages);
             } else {
@@ -82,27 +83,24 @@ var SignalRLib = {
         vars.connection.invoke("StartOrRecoverSession", {"traceParent": traceParent})
             .then(value => {
                 value = JSON.stringify(value);
-                console.log(value);
                 vars.invokeCallback([value], vars.responseCallback);
             }).catch(error => console.log(error));
     },
 
-    InvokeJs: function (methodName, arg1) {
+    InvokeJs: function (methodName, arg) {
         methodName = vars.UTF8ToString(methodName);
 
-        arg1 = vars.UTF8ToString(arg1);
-        console.log("Invoking " + methodName + " with " + arg1);
-        vars.connection.invoke(methodName, arg1)
+        arg = vars.UTF8ToString(arg);
+        vars.connection.invoke(methodName, arg)
             .catch(error => console.error(error));
     },
 
-    OnJs: function (methodName, argCount, callback) {
+    OnJs: function (methodName, callback) {
         methodName = vars.UTF8ToString(methodName);
 
         vars.handlerCallback = callback;
         vars.connection.on(methodName, function (arg) {
             arg = JSON.stringify(arg);
-            console.log(arg);
             vars.invokeCallback([methodName, arg], vars.handlerCallback);
         });
     }

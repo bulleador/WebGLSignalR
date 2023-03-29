@@ -238,7 +238,6 @@ public class SignalR
 
     public void Invoke(string methodName, string arg)
     {
-        Debug.Log($"Invoke arg: {arg}");
         InvokeJs(methodName, arg);
     }
 
