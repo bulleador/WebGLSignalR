@@ -1,33 +1,33 @@
 ﻿using System;
-using Lobby.Signal.Messages;
+using Lobby.SignalR.Messages;
 using UnityEngine;
 
-namespace Lobby.Signal
+namespace Lobby.SignalR
 {
     public class SignalRController : MonoBehaviour
     {
         private SignalRConnection _signalR;
-        private SignalRMessageHandler _messageHandler;
+        private SignalRMessageBroker _messageBroker;
         
         public string ConnectionHandle => _signalR.ConnectionHandle;
         
         public void Initialise(Action<string> onSessionStarted)
         {
-            _messageHandler = new SignalRMessageHandler();
+            _messageBroker = new SignalRMessageBroker();
             
-            _signalR = new SignalRConnection(_messageHandler.OnMessage, _messageHandler.OnSubscriptionChangeMessage);
+            _signalR = new SignalRConnection(_messageBroker.OnMessage, _messageBroker.OnSubscriptionChangeMessage);
             _signalR.Start();
             _signalR.OnStarted += delegate(string connectionHandle) { onSessionStarted?.Invoke(connectionHandle); };
         }
 
         public void AddMessageHandler(string topic, Action<Message> onMessage)
         {   
-            _messageHandler.AddMessageHandler(topic, onMessage);
+            _messageBroker.AddMessageHandler(topic, onMessage);
         }
 
         public void AddSubscriptionChangeMessageHandler(string topic, Action<SubscriptionChangeMessage> onSubscriptionChangeMessage)
         {
-            _messageHandler.AddSubscriptionChangeMessageHandler(topic, onSubscriptionChangeMessage);
+            _messageBroker.AddSubscriptionChangeMessageHandler(topic, onSubscriptionChangeMessage);
         }
         
         private void OnDestroy()

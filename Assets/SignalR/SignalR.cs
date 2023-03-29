@@ -1,13 +1,16 @@
-using AOT;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
+using System.Threading.Tasks;
+using Lobby.SignalR.PlayFab;
+using Microsoft.AspNetCore.Http.Connections;
+using UnityEngine;
+
+#if !UNITY_EDITOR
+using AOT;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Lobby.Signal;
-using Microsoft.AspNetCore.Http.Connections;
 using Newtonsoft.Json;
-using UnityEngine;
+#endif
 
 public class ConnectionEventArgs : EventArgs
 {
@@ -54,12 +57,12 @@ public class SignalR
         try
         {
             connection = new HubConnectionBuilder()
-            .WithUrl(url, options =>
-            {
-                options.AccessTokenProvider = () => Task.FromResult(accessToken);
-                options.Transports = HttpTransportType.LongPolling;
-            })
-            .Build();
+                .WithUrl(url, options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                    options.Transports = HttpTransportType.LongPolling;
+                })
+                .Build();
         }
         catch (Exception ex)
         {
@@ -109,8 +112,8 @@ public class SignalR
         {
             traceParent
         });
-        
-        onResponse(result);   
+
+        onResponse(result);
     }
 
     private static Task OnConnectionClosedEvent(Exception exception)
@@ -144,22 +147,24 @@ public class SignalR
     }
 
     #region Invoke Editor
+
     public async void Invoke(string methodName, string arg1, Action<string> onResponse)
     {
         Debug.Log($"Invoke arg: {arg1}");
         var response = await connection.InvokeAsync<string>(methodName, arg1);
         onResponse(response);
     }
+
     #endregion
 
     #region On Editor
+
     public void On<T1>(string methodName, Action<T1> handler) =>
         connection.On(methodName, (T1 arg1) => handler.Invoke(arg1));
-   
+
     #endregion
 
 #elif UNITY_WEBGL
-
     #region Init JS
 
     [DllImport("__Internal")]

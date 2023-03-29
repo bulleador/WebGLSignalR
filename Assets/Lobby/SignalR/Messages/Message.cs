@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Lobby.Signal.Messages
+namespace Lobby.SignalR.Messages
 {
     public class Message
     {

@@ -1,9 +1,9 @@
-﻿using Lobby.Signal.Messages;
+﻿using Lobby.SignalR.Messages;
 using Newtonsoft.Json;
 
 namespace Lobby
 {
-    public class MessageConverter
+    public class SignalRLobbyMessageConverter
     {
         public T Convert<T>(Message message)
         {

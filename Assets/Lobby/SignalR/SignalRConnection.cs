@@ -1,18 +1,19 @@
 ﻿using System;
-using Lobby.Signal.Messages;
+using Lobby.SignalR.Messages;
+using Lobby.SignalR.PlayFab;
 using Newtonsoft.Json;
 using PlayFab;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Lobby.Signal
+namespace Lobby.SignalR
 {
     public class SignalRConnection
     {
         private string NegotiateUrl =>
             $"https://{PlayFabSettings.staticSettings.TitleId}.playfabapi.com/PubSub/Negotiate";
 
-        private SignalR _signalR;
+        private global::SignalR _signalR;
 
         private readonly Action<Message> _onReceiveMessage;
         private readonly Action<SubscriptionChangeMessage> _onReceiveSubscriptionChangeMessage;
@@ -66,7 +67,7 @@ namespace Lobby.Signal
         {
             Debug.Log("Connecting to SignalR...");
 
-            _signalR = new SignalR();
+            _signalR = new global::SignalR();
             _signalR.Init(url, accessToken);
 
 #if UNITY_EDITOR

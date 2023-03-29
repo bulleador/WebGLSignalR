@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Lobby.Signal.Logging
+namespace Lobby.SignalR.Logging
 {
-    internal class DebugXLogger : ILogger
+    internal class DebugLogger : ILogger
     {
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {

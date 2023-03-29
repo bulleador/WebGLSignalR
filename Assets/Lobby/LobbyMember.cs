@@ -6,19 +6,20 @@ namespace Lobby
 {
     public class LobbyMember
     {
-        [JsonProperty("memberData")]
-        public Dictionary<string,string> MemberData;
-        
-        /// <summary>
-        /// The member entity key.
-        /// </summary>
-        [JsonProperty("memberEntity")]
-        public EntityKey MemberEntity;
-        
-        /// <summary>
-        /// Opaque string, stored on a Subscribe call, which indicates the connection an owner or member has with PubSub.
-        /// </summary>
+        public LobbyMember(Member member)
+        {
+            MemberEntity = member.MemberEntity;
+            MemberData = member.MemberData;
+            PubSubConnectionHandle = member.PubSubConnectionHandle;
+        }
+
+        [JsonProperty("memberData")] 
+        public Dictionary<string, string> MemberData { get; set; }
+
+        [JsonProperty("memberEntity")] 
+        public EntityKey MemberEntity { get; set; }
+
         [JsonProperty("pubSubConnectionHandle")]
-        public string PubSubConnectionHandle;
+        public string PubSubConnectionHandle { get; set; }
     }
 }

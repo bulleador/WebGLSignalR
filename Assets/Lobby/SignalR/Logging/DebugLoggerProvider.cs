@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Lobby.Signal.Logging
+namespace Lobby.SignalR.Logging
 {
-    internal class DebugXLoggerProvider : ILoggerProvider
+    internal class DebugLoggerProvider : ILoggerProvider
     {
         public void Dispose()
         {
@@ -11,7 +11,7 @@ namespace Lobby.Signal.Logging
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new DebugXLogger();
+            return new DebugLogger();
         }
     }
 }
