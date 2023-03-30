@@ -14,16 +14,25 @@ public class LobbyConsoleUI : MonoBehaviour
     private void OnEnable()
     {
         Application.logMessageReceivedThreaded += OnLogMessageReceived;
+        
+        lobbyController.OnLobbyJoined += OnLobbyJoined;
+        lobbyController.OnLobbyLeft += OnLobbyLeft;
+    }
+    
+    private void OnLobbyJoined(ObservableLobby lobby, bool asOwner)
+    {
+        LogLobby(asOwner ? $"Lobby {lobby.LobbyId} created" : $"Lobby {lobby.LobbyId} joined");
 
-        lobbyController.OnLobbyCreated += () => LogLobbyLocal("Lobby created");
-        lobbyController.OnLobbyLeft += () => LogLobbyLocal("Lobby left");
-        lobbyController.OnLobbyJoined += () => LogLobby("Lobby joined");
+        lobby.OnLobbyMemberAdded += member => LogLobby($"Member added: {member.MemberEntity.Id}");
+        lobby.OnLobbyMemberRemoved += member => LogLobby($"Member removed: {member.MemberEntity.Id}");
+        lobby.OnLobbyMemberDataChanged += member => LogLobby($"Member data changed: {member.MemberEntity.Id}");
+        lobby.OnLobbyOwnerChanged += owner => LogLobby($"Owner changed: {owner.Id}");
+        lobby.OnLobbyDataChanged += data => LogLobby($"Lobby data changed: {string.Join(",", data.Keys)}");
+    }
 
-        lobbyController.OnLobbyMemberAdded += member => LogLobby($"Member added: {member.MemberEntity.Id}");
-        lobbyController.OnLobbyMemberRemoved += member => LogLobby($"Member removed: {member.MemberEntity.Id}");
-        lobbyController.OnLobbyMemberDataChanged += member => LogLobby($"Member data changed: {member.MemberEntity.Id}");
-        lobbyController.OnLobbyOwnerChanged += owner => LogLobby($"Owner changed: {owner.Id}");
-        lobbyController.OnLobbyDataChanged += data => LogLobby($"Lobby data changed: {string.Join(",", data.Keys)}");
+    private void OnLobbyLeft(ObservableLobby lobby, LobbyLeaveReason reason)
+    {
+        LogLobbyLocal($"Lobby {lobby.LobbyId} left: {reason}");
     }
 
     private void OnLogMessageReceived(string condition, string stacktrace, LogType type)

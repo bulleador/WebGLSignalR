@@ -15,9 +15,9 @@ namespace Lobby
         /// The member that was added or his data was changed.
         /// </summary>
         [JsonProperty("memberToMerge")]
-        public LobbyMember MemberToMerge { get; set; }
+        public Member MemberToMerge { get; set; }
 
-        [JsonProperty("memberToDelete")] public LobbyMember RemovedMember { get; set; }
+        [JsonProperty("memberToDelete")] public Member RemovedMember { get; set; }
 
         [JsonProperty("lobbyData")] public Dictionary<string, string> LobbyData { get; set; }
 

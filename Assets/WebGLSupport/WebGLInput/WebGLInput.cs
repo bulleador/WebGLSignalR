@@ -11,7 +11,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using WebGLSupport.WebGLInput.Mobile;
 using WebGLSupport.WebGLInput.Wrapper;
+
+#if UNITY_WEBGL && !UNTIY_EDITOR
 // for DllImport
+using System.Runtime.InteropServices;
+#endif
 
 namespace WebGLSupport.WebGLInput
 {
@@ -76,24 +80,83 @@ namespace WebGLSupport.WebGLInput
         public static extern void WebGLInputEnableTabText(int id, bool enable);
 #endif
 #else
-        public static void WebGLInputInit() {}
-        public static int WebGLInputCreate(string canvasId, int x, int y, int width, int height, int fontsize, string text, string placeholder, bool isMultiLine, bool isPassword, bool isHidden, bool isMobile) { return 0; }
-        public static void WebGLInputEnterSubmit(int id, bool flag) { }
-        public static void WebGLInputTab(int id, Action<int, int> cb) { }
-        public static void WebGLInputFocus(int id) { }
-        public static void WebGLInputOnFocus(int id, Action<int> cb) { }
-        public static void WebGLInputOnBlur(int id, Action<int> cb) { }
-        public static void WebGLInputOnValueChange(int id, Action<int, string> cb) { }
-        public static void WebGLInputOnEditEnd(int id, Action<int, string> cb) { }
-        public static int WebGLInputSelectionStart(int id) { return 0; }
-        public static int WebGLInputSelectionEnd(int id) { return 0; }
-        public static int WebGLInputSelectionDirection(int id) { return 0; }
-        public static void WebGLInputSetSelectionRange(int id, int start, int end) { }
-        public static void WebGLInputMaxLength(int id, int maxlength) { }
-        public static void WebGLInputText(int id, string text) { }
-        public static bool WebGLInputIsFocus(int id) { return false; }
-        public static void WebGLInputDelete(int id) { }
-        public static void WebGLInputForceBlur(int id) { }
+        public static void WebGLInputInit()
+        {
+        }
+
+        public static int WebGLInputCreate(string canvasId, int x, int y, int width, int height, int fontsize,
+            string text, string placeholder, bool isMultiLine, bool isPassword, bool isHidden, bool isMobile)
+        {
+            return 0;
+        }
+
+        public static void WebGLInputEnterSubmit(int id, bool flag)
+        {
+        }
+
+        public static void WebGLInputTab(int id, Action<int, int> cb)
+        {
+        }
+
+        public static void WebGLInputFocus(int id)
+        {
+        }
+
+        public static void WebGLInputOnFocus(int id, Action<int> cb)
+        {
+        }
+
+        public static void WebGLInputOnBlur(int id, Action<int> cb)
+        {
+        }
+
+        public static void WebGLInputOnValueChange(int id, Action<int, string> cb)
+        {
+        }
+
+        public static void WebGLInputOnEditEnd(int id, Action<int, string> cb)
+        {
+        }
+
+        public static int WebGLInputSelectionStart(int id)
+        {
+            return 0;
+        }
+
+        public static int WebGLInputSelectionEnd(int id)
+        {
+            return 0;
+        }
+
+        public static int WebGLInputSelectionDirection(int id)
+        {
+            return 0;
+        }
+
+        public static void WebGLInputSetSelectionRange(int id, int start, int end)
+        {
+        }
+
+        public static void WebGLInputMaxLength(int id, int maxlength)
+        {
+        }
+
+        public static void WebGLInputText(int id, string text)
+        {
+        }
+
+        public static bool WebGLInputIsFocus(int id)
+        {
+            return false;
+        }
+
+        public static void WebGLInputDelete(int id)
+        {
+        }
+
+        public static void WebGLInputForceBlur(int id)
+        {
+        }
 
 #if WEBGLINPUT_TAB
         public static void WebGLInputEnableTabText(int id, bool enable) { }
@@ -122,7 +185,12 @@ namespace WebGLSupport.WebGLInput
 #endif
             WebGLInputPlugin.WebGLInputInit();
         }
-        public int Id { get { return id; } }
+
+        public int Id
+        {
+            get { return id; }
+        }
+
         internal int id = -1;
         public IInputField input;
         bool blurBlock = false;
@@ -134,7 +202,8 @@ namespace WebGLSupport.WebGLInput
         {
             if (GetComponent<InputField>()) return new WrappedInputField(GetComponent<InputField>());
 #if TMP_WEBGL_SUPPORT
-            if (GetComponent<TMPro.TMP_InputField>()) return new WrappedTMPInputField(GetComponent<TMPro.TMP_InputField>());
+            if (GetComponent<TMPro.TMP_InputField>())
+                return new WrappedTMPInputField(GetComponent<TMPro.TMP_InputField>());
 #endif // TMP_WEBGL_SUPPORT
             throw new Exception("Can not Setup WebGLInput!!");
         }
@@ -174,6 +243,7 @@ namespace WebGLSupport.WebGLInput
                 return new RectInt(x, y, (int)rect.width, (int)1);
             }
         }
+
         /// <summary>
         /// 対象が選択されたとき
         /// </summary>
@@ -189,7 +259,9 @@ namespace WebGLSupport.WebGLInput
 
             // モバイルの場合、強制表示する
             var isHidden = !(showHtmlElement || Application.isMobilePlatform);
-            id = WebGLInputPlugin.WebGLInputCreate(WebGLInput.CanvasId, rect.x, rect.y, rect.width, rect.height, fontSize, input.text, input.placeholder, input.lineType != LineType.SingleLine, isPassword, isHidden, Application.isMobilePlatform);
+            id = WebGLInputPlugin.WebGLInputCreate(WebGLInput.CanvasId, rect.x, rect.y, rect.width, rect.height,
+                fontSize, input.text, input.placeholder, input.lineType != LineType.SingleLine, isPassword, isHidden,
+                Application.isMobilePlatform);
 
             instances[id] = this;
             WebGLInputPlugin.WebGLInputEnterSubmit(id, input.lineType != LineType.MultiLineNewline);
@@ -261,7 +333,7 @@ namespace WebGLSupport.WebGLInput
             WebGLInputPlugin.WebGLInputDelete(id);
             input.DeactivateInputField();
             instances.Remove(id);
-            id = -1;    // reset id to -1;
+            id = -1; // reset id to -1;
             WebGLWindow.WebGLWindow.OnBlurEvent -= OnWindowBlur;
         }
 
@@ -289,9 +361,9 @@ namespace WebGLSupport.WebGLInput
             yield return null;
             if (!instances.ContainsKey(id)) yield break;
 
-            var block = instances[id].blurBlock;    // get blur block state
-            instances[id].blurBlock = false;        // reset instalce block state
-            if (block) yield break;                 // if block. break it!!
+            var block = instances[id].blurBlock; // get blur block state
+            instances[id].blurBlock = false; // reset instalce block state
+            if (block) yield break; // if block. break it!!
             instances[id].DeactivateInputField();
         }
 
@@ -328,6 +400,7 @@ namespace WebGLSupport.WebGLInput
                 WebGLInputPlugin.WebGLInputSetSelectionRange(id, start + offset, end + offset);
             }
         }
+
         [MonoPInvokeCallback(typeof(Action<int, string>))]
         static void OnEditEnd(int id, string value)
         {
@@ -336,6 +409,7 @@ namespace WebGLSupport.WebGLInput
                 instances[id].input.text = value;
             }
         }
+
         [MonoPInvokeCallback(typeof(Action<int, int>))]
         static void OnTab(int id, int value)
         {
@@ -356,7 +430,8 @@ namespace WebGLSupport.WebGLInput
                 if (Application.isMobilePlatform)
                 {
                     return;
-                } else
+                }
+                else
                 {
                     OnSelect();
                 }
@@ -407,10 +482,12 @@ namespace WebGLSupport.WebGLInput
         {
             WebGLInputTabFocus.Add(this);
         }
+
         private void OnDisable()
         {
             WebGLInputTabFocus.Remove(this);
         }
+
         public int CompareTo(WebGLInput other)
         {
             var a = GetScreenCoordinates(input.RectTransform());
@@ -426,7 +503,7 @@ namespace WebGLSupport.WebGLInput
             if (!instances.ContainsKey(id)) return;
             var current = EventSystem.current.currentSelectedGameObject;
             if (current != null) return;
-            WebGLInputPlugin.WebGLInputForceBlur(id);   // Input ではないし、キーボードを閉じる
+            WebGLInputPlugin.WebGLInputForceBlur(id); // Input ではないし、キーボードを閉じる
         }
 
         /// <summary>

@@ -1,7 +1,11 @@
 ﻿using System;
 using AOT;
 using UnityEngine;
+
+#if UNITY_WEBGL && !UNTIY_EDITOR
 // for DllImport
+using System.Runtime.InteropServices;
+#endif
 
 namespace WebGLSupport.WebGLWindow
 {

@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using AOT;
 using UnityEngine;
 using UnityEngine.EventSystems;
+
+#if UNITY_WEBGL && !UNTIY_EDITOR
 // for DllImport
+using System.Runtime.InteropServices;
+#endif
 
 namespace WebGLSupport.WebGLInput.Mobile
 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Lobby;
+using PlayFab.MultiplayerModels;
 using UnityEngine;
 
 public class LobbyMemberListUI : MonoBehaviour
@@ -12,28 +13,49 @@ public class LobbyMemberListUI : MonoBehaviour
     [SerializeField] private LobbyController lobbyController;
     
     private readonly List<LobbyMemberEntryUI> _memberListEntries = new();
+    
+    private ObservableLobby _currentLobby;
 
     private void OnEnable()
     {
         Clear();
         
-        lobbyController.OnLobbyMemberAdded += OnMemberAdded;
-        lobbyController.OnLobbyMemberRemoved += OnMemberRemoved;
-        lobbyController.OnLobbyMemberDataChanged += OnMemberDataChanged;
+        lobbyController.OnLobbyJoined += OnLobbyJoined;
         lobbyController.OnLobbyLeft += OnLobbyLeft;
     }
 
-
     private void OnDisable()
     {
-        lobbyController.OnLobbyMemberAdded -= OnMemberAdded;
-        lobbyController.OnLobbyMemberRemoved -= OnMemberRemoved;
-        lobbyController.OnLobbyMemberDataChanged -= OnMemberDataChanged;
+        lobbyController.OnLobbyJoined -= OnLobbyJoined;
         lobbyController.OnLobbyLeft -= OnLobbyLeft;
     }
-    
-    private void OnLobbyLeft()
+
+    private void OnLobbyJoined(ObservableLobby lobby, bool asOwner)
     {
+        _currentLobby = lobby;
+        
+        foreach (var member in lobby.Members)
+        {
+            OnMemberAdded(member);
+        }
+        
+        lobby.OnLobbyMemberDataChanged += OnMemberDataChanged;
+        lobby.OnLobbyMemberAdded += OnMemberAdded;
+        lobby.OnLobbyMemberRemoved += OnMemberRemoved;
+        lobby.OnLobbyOwnerChanged += OnOwnerChanged;
+        lobby.OnLobbyDataChanged += OnLobbyDataChanged;
+    }
+
+    private void OnLobbyLeft(ObservableLobby observableLobby, LobbyLeaveReason lobbyLeaveReason)
+    {
+        observableLobby.OnLobbyMemberDataChanged -= OnMemberDataChanged;
+        observableLobby.OnLobbyMemberAdded -= OnMemberAdded;
+        observableLobby.OnLobbyMemberRemoved -= OnMemberRemoved;
+        observableLobby.OnLobbyOwnerChanged -= OnOwnerChanged;
+        observableLobby.OnLobbyDataChanged -= OnLobbyDataChanged;
+        
+        _currentLobby = null;
+        
         Clear();
     }
     
@@ -48,17 +70,20 @@ public class LobbyMemberListUI : MonoBehaviour
         _memberListEntries.Clear();
     }
     
-    private void OnMemberAdded(LobbyMember newMember)
+    private void OnMemberAdded(Member newMember)
     {
         if (_memberListEntries.Any(entry => entry.Member.MemberEntity.Id == newMember.MemberEntity.Id))
-            throw new Exception("Member already in list"); // TODO: Handle this better
+        {
+            Debug.Log($"Member {newMember.MemberEntity.Id} already in list.");
+            return;
+        }
         
         var newEntry = Instantiate(memberListEntryPrefab, memberListEntryParent);
-        newEntry.Initialise(lobbyController, newMember);
+        newEntry.Initialise(_currentLobby, newMember);
         _memberListEntries.Add(newEntry);
     }
     
-    private void OnMemberRemoved(LobbyMember obj)
+    private void OnMemberRemoved(Member obj)
     {
         var entry = _memberListEntries.FirstOrDefault(e => e.Member.MemberEntity.Id == obj.MemberEntity.Id);
         if (entry == null)
@@ -68,12 +93,22 @@ public class LobbyMemberListUI : MonoBehaviour
         entry.HandleMemberRemoved();
     }
     
-    private void OnMemberDataChanged(LobbyMember obj)
+    private void OnMemberDataChanged(Member obj)
     {
         var entry = _memberListEntries.FirstOrDefault(e => e.Member.MemberEntity.Id == obj.MemberEntity.Id);
         if (entry == null)
             throw new Exception("Member not in list"); // TODO: Handle this better
         
         entry.UpdateMember(obj);
+    }
+    
+    private void OnLobbyDataChanged(Dictionary<string, string> obj)
+    {
+        
+    }
+
+    private void OnOwnerChanged(EntityKey obj)
+    {
+        
     }
 }

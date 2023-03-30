@@ -7,27 +7,15 @@ namespace Lobby
     {
         public T Convert<T>(Message message)
         {
-            var payload = ToJson(message);
-            return Convert<T>(payload);
+            var payload = ToJson(message.Payload);
+            return JsonConvert.DeserializeObject<T>(payload);
         }
-
-        public string ToJson(Message message)
-        {
-            var payload = message.Payload;
-            return ToJson(payload);
-        }
-
+        
         public string ToJson(string payload)
         {
             var bytes = System.Convert.FromBase64String(payload);
             var decoded = System.Text.Encoding.UTF8.GetString(bytes);
             return decoded;
-        }
-
-        public T Convert<T>(string payload)
-        {
-            var json = ToJson(payload);
-            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }

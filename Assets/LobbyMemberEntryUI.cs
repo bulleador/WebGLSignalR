@@ -11,8 +11,8 @@ public class LobbyMemberEntryUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI ownerText;
     [SerializeField] private Button kickButton;
     
-    public LobbyMember Member { get; private set; }
-    private LobbyController Lobby { get; set; }
+    public Member Member { get; private set; }
+    private ObservableLobby Lobby { get; set; }
 
     private void Awake()
     {
@@ -21,16 +21,16 @@ public class LobbyMemberEntryUI : MonoBehaviour
 
     private void OnKickButtonClicked()
     {
-        Lobby.KickMember(Member);
+        Lobby.KickMember(Member, false);
     }
 
-    public void Initialise(LobbyController lobbyController, LobbyMember member)
+    public void Initialise(ObservableLobby lobby, Member member)
     {
         if (Member != null)
             throw new Exception("LobbyMemberEntryUI already initialised");
         
         Member = member;
-        Lobby = lobbyController;
+        Lobby = lobby;
         Lobby.OnLobbyOwnerChanged += OnLobbyOwnerChanged;
         
         UpdateUI();
@@ -41,7 +41,7 @@ public class LobbyMemberEntryUI : MonoBehaviour
         UpdateUI();
     }
 
-    public void UpdateMember(LobbyMember member)
+    public void UpdateMember(Member member)
     {
         if (Member == null)
             throw new Exception("LobbyMemberEntryUI not initialised");
@@ -57,7 +57,13 @@ public class LobbyMemberEntryUI : MonoBehaviour
     {
         Destroy(gameObject);
     }
-    
+
+    private void OnDestroy()
+    {
+        if (Lobby != null)
+            Lobby.OnLobbyOwnerChanged -= OnLobbyOwnerChanged;
+    }
+
     private void UpdateUI()
     {
         displayNameText.text = Member.MemberEntity.Id;

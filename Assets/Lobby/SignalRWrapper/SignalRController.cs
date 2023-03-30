@@ -1,21 +1,23 @@
 ﻿using System;
 using Lobby.SignalRWrapper.Messages;
-using UnityEngine;
 
 namespace Lobby.SignalRWrapper
 {
-    public class SignalRController : MonoBehaviour
+    public class SignalRController
     {
-        private SignalRConnection _signalR;
-        private SignalRMessageBroker _messageBroker;
+        private readonly SignalRConnection _signalR;
+        private readonly SignalRMessageBroker _messageBroker;
         
         public string ConnectionHandle => _signalR.ConnectionHandle;
-        
-        public void Initialise(Action<string> onSessionStarted)
+
+        public SignalRController()
         {
             _messageBroker = new SignalRMessageBroker();
-            
             _signalR = new SignalRConnection(_messageBroker);
+        }
+
+        public void Initialise(Action<string> onSessionStarted)
+        {
             _signalR.Start();
             _signalR.OnStarted += delegate(string connectionHandle) { onSessionStarted?.Invoke(connectionHandle); };
         }
@@ -30,7 +32,7 @@ namespace Lobby.SignalRWrapper
             _messageBroker.AddSubscriptionChangeMessageHandler(topic, onSubscriptionChangeMessage);
         }
         
-        private void OnDestroy()
+        public void Dispose()
         {
             _signalR?.Stop();
         }

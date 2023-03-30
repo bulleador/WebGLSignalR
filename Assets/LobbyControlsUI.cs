@@ -31,12 +31,11 @@ public class LobbyControlsUI : MonoBehaviour
         
         AccountManager.OnAuthenticated += OnAuthenticated;
         
-        lobbyController.OnLobbyCreated += OnLobbyCreated;
         lobbyController.OnLobbyJoined += OnLobbyJoined;
         lobbyController.OnLobbyLeft += OnLobbyLeft;
     }
 
-    private void OnLobbyLeft()
+    private void OnLobbyLeft(ObservableLobby observableLobby, LobbyLeaveReason lobbyLeaveReason)
     {
         SetInteractable(false);
         
@@ -45,22 +44,18 @@ public class LobbyControlsUI : MonoBehaviour
         lobbyConnectionStringInputField.interactable = true;
     }
 
-    private void OnLobbyJoined()
+    private void OnLobbyJoined(ObservableLobby observableLobby, bool asOwner)
     {
         SetInteractable(false);
-        
-        leaveLobbyButton.interactable = true;
-        isReadyToggle.interactable = true;
-    }
 
-    private void OnLobbyCreated()
-    {
-        SetInteractable(false);
-        
-        leaveLobbyButton.interactable = true;
-        startGameButton.interactable = true;
-    }
+        if (asOwner)
+            startGameButton.interactable = true;
+        else
+            isReadyToggle.interactable = true;
 
+        leaveLobbyButton.interactable = true;
+    }
+    
     private void OnAuthenticated()
     {
         SetInteractable(false);

@@ -6,11 +6,9 @@ namespace Lobby
 {
     public class LobbyMember
     {
-        public LobbyMember(Member member)
+        // For serialisation
+        private LobbyMember()
         {
-            MemberEntity = member.MemberEntity;
-            MemberData = member.MemberData;
-            PubSubConnectionHandle = member.PubSubConnectionHandle;
         }
 
         [JsonProperty("memberData")] 
@@ -21,5 +19,16 @@ namespace Lobby
 
         [JsonProperty("pubSubConnectionHandle")]
         public string PubSubConnectionHandle { get; set; }
+        
+        public static LobbyMember FromMember(Member member)
+        {
+            var lobbyMember = new LobbyMember
+            {
+                MemberData = member.MemberData,
+                MemberEntity = member.MemberEntity,
+                PubSubConnectionHandle = member.PubSubConnectionHandle
+            };
+            return lobbyMember;
+        }
     }
 }
