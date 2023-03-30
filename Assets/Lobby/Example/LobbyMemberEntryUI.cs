@@ -1,5 +1,6 @@
 using System;
 using Lobby;
+using Lobby.LobbyInstance;
 using PlayFab.MultiplayerModels;
 using TMPro;
 using UnityEngine;

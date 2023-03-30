@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using PlayFab.MultiplayerModels;
 
-namespace Lobby
+namespace Lobby.LobbyInstance
 {
     public class LobbyChange
     {

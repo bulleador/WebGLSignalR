@@ -1,4 +1,5 @@
 using Lobby;
+using Lobby.LobbyInstance;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,15 +7,11 @@ using UnityEngine.UI;
 public class LobbyControlsUI : MonoBehaviour
 {
     [SerializeField] private Button createLobbyButton;
-    
     [SerializeField] private Button joinLobbyButton;
     [SerializeField] private TMP_InputField lobbyConnectionStringInputField;
     [SerializeField] private Button leaveLobbyButton;
-    
     [SerializeField] private Toggle isReadyToggle;
-    
     [SerializeField] private Button startGameButton;
-
     [SerializeField] private LobbyController lobbyController;
 
     private void Awake()
@@ -23,16 +20,20 @@ public class LobbyControlsUI : MonoBehaviour
         joinLobbyButton.onClick.AddListener(OnJoinLobbyButtonClicked);
         leaveLobbyButton.onClick.AddListener(OnLeaveLobbyButtonClicked);
         startGameButton.onClick.AddListener(OnStartGameButtonClicked);
-        isReadyToggle.onValueChanged.AddListener(lobbyController.SetReady);
+        isReadyToggle.onValueChanged.AddListener(OnIsReadyToggleValueChanged);
         
         isReadyToggle.SetIsOnWithoutNotify(false);
 
         SetInteractable(false);
         
-        AccountManager.OnAuthenticated += OnAuthenticated;
-        
+        lobbyController.OnInitialised += OnInitialise;
         lobbyController.OnLobbyJoined += OnLobbyJoined;
         lobbyController.OnLobbyLeft += OnLobbyLeft;
+    }
+
+    private void OnIsReadyToggleValueChanged(bool isReady)
+    {
+        lobbyController.Lobby.SetReady(isReady);
     }
 
     private void OnLobbyLeft(ObservableLobby observableLobby, LobbyLeaveReason lobbyLeaveReason)
@@ -56,7 +57,7 @@ public class LobbyControlsUI : MonoBehaviour
         leaveLobbyButton.interactable = true;
     }
     
-    private void OnAuthenticated()
+    private void OnInitialise()
     {
         SetInteractable(false);
         
@@ -77,7 +78,7 @@ public class LobbyControlsUI : MonoBehaviour
 
     private void OnStartGameButtonClicked()
     {
-        lobbyController.StartGame();
+        lobbyController.Lobby.StartGame();
     }
     
     private void OnCreateLobbyButtonClicked()

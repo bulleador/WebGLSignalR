@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Lobby;
+using Lobby.LobbyInstance;
 using PlayFab.MultiplayerModels;
 using UnityEngine;
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Lobby
+namespace Lobby.LobbyInstance
 {
     public class LobbyChangeMessage
     {

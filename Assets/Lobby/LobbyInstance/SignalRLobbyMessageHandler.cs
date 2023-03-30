@@ -2,18 +2,18 @@
 using Lobby.SignalRWrapper.Messages;
 using UnityEngine;
 
-namespace Lobby
+namespace Lobby.LobbyInstance
 {
     public class SignalRLobbyMessageHandler
     {
-        private readonly LobbyController _lobbyController;
+        private readonly ObservableLobby _lobby;
         private readonly SignalRLobbyMessageConverter _signalRLobbyMessageConverter;
 
         private readonly bool _debug;
 
-        public SignalRLobbyMessageHandler(LobbyController lobbyController, bool debug = false)
+        public SignalRLobbyMessageHandler(ObservableLobby lobby, bool debug = false)
         {
-            _lobbyController = lobbyController;
+            _lobby = lobby;
             _signalRLobbyMessageConverter = new SignalRLobbyMessageConverter();
             _debug = debug;
         }
@@ -26,7 +26,7 @@ namespace Lobby
             try
             {
                 var lobbyChangeMessage = _signalRLobbyMessageConverter.Convert<LobbyChangeMessage>(message);
-                _lobbyController.Lobby.ApplyOrQueueChanges(lobbyChangeMessage.Changes);
+                _lobby.ApplyOrQueueChanges(lobbyChangeMessage.Changes);
             }
             catch (Exception e)
             {
@@ -45,13 +45,13 @@ namespace Lobby
                 switch (message.Status)
                 {
                     case "unsubscribeSuccess" when message.UnsubscribeReason == "MemberLeft":
-                        _lobbyController.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedMemberLeft);
+                        _lobby.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedMemberLeft);
                         break;
                     case "unsubscribeSuccess" when message.UnsubscribeReason == "LobbyDeleted":
-                        _lobbyController.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedLobbyDeleted);
+                        _lobby.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedLobbyDeleted);
                         break;
-                    case "unsubscribeSuccess" when message.UnsubscribeReason == "MemberRemoved": // todo might be wrong
-                        _lobbyController.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedMemberRemoved);
+                    case "unsubscribeSuccess" when message.UnsubscribeReason == "MemberRemoved":
+                        _lobby.OnSubscriptionMessage(SubscriptionMessageType.UnsubscribedMemberRemoved);
                         break;
                 }
             }

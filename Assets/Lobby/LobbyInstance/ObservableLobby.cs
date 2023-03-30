@@ -6,11 +6,12 @@ using PlayFab;
 using PlayFab.MultiplayerModels;
 using UnityEngine;
 
-namespace Lobby
+namespace Lobby.LobbyInstance
 {
     public class ObservableLobby
     {
         private readonly SignalRController _signalRController;
+
         private readonly Queue<LobbyChange> _queuedChanges = new();
         private readonly PlayFab.MultiplayerModels.Lobby _lobby = new()
         {
@@ -31,19 +32,23 @@ namespace Lobby
         public uint MaxPlayers => _lobby.MaxPlayers;
 
         public bool IsOwner => LobbyOwner.Id == PlayFabSettings.staticPlayer.EntityId;
-
-
+        
         public event Action<Dictionary<string, string>> OnLobbyDataChanged;
         public event Action<Member> OnLobbyMemberAdded;
         public event Action<Member> OnLobbyMemberRemoved;
         public event Action<Member> OnLobbyMemberDataChanged;
         public event Action<EntityKey> OnLobbyOwnerChanged;
+        public event Action<LobbyLeaveReason> OnLobbyLeft;
 
         public ObservableLobby(string lobbyId, string connectionString, SignalRController signalRController)
         {
             _lobby.LobbyId = lobbyId;
             _lobby.ConnectionString = connectionString;
+
             _signalRController = signalRController;
+            var signalRLobbyMessageHandler = new SignalRLobbyMessageHandler(this, true);
+            _signalRController.AddMessageHandler("LobbyChange", signalRLobbyMessageHandler.OnLobbyChangeMessage);
+            _signalRController.AddSubscriptionChangeMessageHandler("LobbyChange", signalRLobbyMessageHandler.OnLobbySubscriptionChangeMessage);
         }
 
         public void Initialise(Action onInitialised, Action onInitialisationFailed)
@@ -302,6 +307,26 @@ namespace Lobby
             void OnSubscriptionToLobbyEventsFailed(PlayFabError error)
             {
                 Debug.LogError($"Subscription to lobby events failed - {error.GenerateErrorReport()}");
+            }
+        }
+
+        public void OnSubscriptionMessage(SubscriptionMessageType messageType)
+        {
+            switch (messageType)
+            {
+                case SubscriptionMessageType.Subscribed:
+                    break;
+                case SubscriptionMessageType.UnsubscribedMemberLeft:
+                    OnLobbyLeft?.Invoke(LobbyLeaveReason.MemberLeft);
+                    break;
+                case SubscriptionMessageType.UnsubscribedMemberRemoved:
+                    OnLobbyLeft?.Invoke(LobbyLeaveReason.MemberKicked);
+                    break;
+                case SubscriptionMessageType.UnsubscribedLobbyDeleted:
+                    OnLobbyLeft?.Invoke(LobbyLeaveReason.LobbyClosed);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(messageType), messageType, null);
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Lobby.LobbyInstance;
 using Lobby.SignalRWrapper;
 using PlayFab;
 using PlayFab.MultiplayerModels;
@@ -11,6 +12,19 @@ using UnityEditor;
 
 namespace Lobby
 {
+    /// <summary>
+    /// This class is responsible for managing the user's presence in a lobby.
+        /// <para>
+            /// Allows the user to create a lobby, join a lobby and leave a lobby,
+            /// but changing the lobby's data is handled by the ObservableLobby class.
+        /// </para>
+        /// <para>
+            /// IMPORTANT: LobbyController has to be initialised before it can be used with <c>Initialise()</c>
+        /// </para>
+        /// <para>
+            /// IMPORTANT 2: <c>PlayFabClient.IsEntityLoggedIn()</c> must be true before <c>Initialise()</c> is called.
+        /// </para>
+    /// </summary>
     public class LobbyController : MonoBehaviour
     {
         public static EntityKey LocalEntityKey => new()
@@ -24,32 +38,39 @@ namespace Lobby
             MemberEntity = LocalEntityKey
         };
 
+        private bool _initialised;
+
+        public event Action OnInitialised;
         public event Action<ObservableLobby, bool> OnLobbyJoined;
         public event Action<ObservableLobby, LobbyLeaveReason> OnLobbyLeft;
 
         public ObservableLobby Lobby { get; private set; }
-        public bool IsOwner => InLobby && Lobby.LobbyOwner.Id == LocalEntityKey.Id;
         public bool InLobby => Lobby != null;
 
         private SignalRController _signalRController;
-        private SignalRLobbyMessageHandler _signalRLobbyMessageHandler;
 
         private void Awake()
         {
-            AccountManager.OnAuthenticated += () =>
-            {
-                _signalRLobbyMessageHandler = new SignalRLobbyMessageHandler(this, true);
-                _signalRController = new SignalRController();
+            _signalRController = new SignalRController();
+        }
 
-                _signalRController.AddMessageHandler("LobbyChange", _signalRLobbyMessageHandler.OnLobbyChangeMessage);
-                _signalRController.AddSubscriptionChangeMessageHandler("LobbyChange",
-                    _signalRLobbyMessageHandler.OnLobbySubscriptionChangeMessage);
-                _signalRController.Initialise(null);
-            };
+        public void Initialise()
+        {
+            if (_initialised)
+                throw new Exception("Already initialised");
+
+            _signalRController.Initialise(s =>
+            {
+                _initialised = true;
+                OnInitialised?.Invoke();
+            });
         }
 
         public void CreateLobby()
         {
+            if (!_initialised)
+                throw new Exception("Not initialised");
+
             if (InLobby)
                 throw new Exception("Already in a lobby");
 
@@ -66,17 +87,14 @@ namespace Lobby
 
             void OnLobbyCreated(CreateLobbyResult createLobbyResult)
             {
-                Debug.Log(
-                    $"Lobby created. Lobby ID: {createLobbyResult.LobbyId}. Lobby connection string: {createLobbyResult.ConnectionString}");
-                Lobby = new ObservableLobby(createLobbyResult.LobbyId, createLobbyResult.ConnectionString,
-                    _signalRController);
+                Debug.Log($"Lobby created. Lobby ID: {createLobbyResult.LobbyId}. " +
+                          $"Lobby connection string: {createLobbyResult.ConnectionString}");
 
 #if UNITY_EDITOR
                 EditorGUIUtility.systemCopyBuffer = createLobbyResult.ConnectionString;
 #endif
 
-                Lobby.Initialise(() => { OnLobbyJoined?.Invoke(Lobby, true); },
-                    () => throw new NotImplementedException());
+                CreateAndInitialiseLobbyInstance(createLobbyResult.LobbyId, createLobbyResult.ConnectionString);
             }
 
             void OnLobbyCreationFailed(PlayFabError error)
@@ -88,6 +106,9 @@ namespace Lobby
 
         public void JoinLobby(string connectionString)
         {
+            if (!_initialised)
+                throw new Exception("Not initialised");
+
             if (InLobby)
                 throw new Exception("Already in a lobby");
 
@@ -100,9 +121,7 @@ namespace Lobby
             void OnLobbyJoined(JoinLobbyResult joinLobbyResult)
             {
                 Debug.Log($"Lobby joined. Lobby ID: {joinLobbyResult.LobbyId}");
-                Lobby = new ObservableLobby(joinLobbyResult.LobbyId, connectionString, _signalRController);
-                Lobby.Initialise(() => { this.OnLobbyJoined?.Invoke(Lobby, false); },
-                    () => throw new NotImplementedException());
+                CreateAndInitialiseLobbyInstance(joinLobbyResult.LobbyId, connectionString);
             }
 
             void OnLobbyJoinFailed(PlayFabError error)
@@ -138,78 +157,23 @@ namespace Lobby
             this.OnLobbyLeft?.Invoke(Lobby, LobbyLeaveReason.MemberLeft);
         }
 
+        private void CreateAndInitialiseLobbyInstance(string lobbyId, string connectionString)
+        {
+            Lobby = new ObservableLobby(lobbyId, connectionString, _signalRController);
+            Lobby.Initialise(() => { OnLobbyJoined?.Invoke(Lobby, true); },
+                () => throw new NotImplementedException());
+
+            Lobby.OnLobbyLeft += reason =>
+            {
+                OnLobbyLeft?.Invoke(Lobby, reason);
+                Dispose();
+            };
+        }
+
         private void Dispose()
         {
             Lobby = null;
-            // TODO _signalRController.Dispose();
+            _signalRController.Dispose();
         }
-
-        public void SetReady(bool isReady)
-        {
-            if (!InLobby)
-                throw new Exception("Not in a lobby");
-
-            Lobby.SetReady(isReady);
-        }
-
-        public void StartGame()
-        {
-            if (!InLobby)
-                throw new Exception("Not in a lobby");
-
-            Lobby.StartGame();
-        }
-
-        public void KickMember(Member member, bool preventRejoin = false)
-        {
-            if (!InLobby)
-                throw new Exception("Not in a lobby");
-
-            Lobby.KickMember(member, preventRejoin);
-        }
-
-        public void OnSubscriptionMessage(SubscriptionMessageType messageType)
-        {
-            Debug.Log($"Received subscription message - {messageType}");
-
-            switch (messageType)
-            {
-                case SubscriptionMessageType.Subscribed:
-                    break;
-                case SubscriptionMessageType.UnsubscribedMemberLeft:
-                    break;
-                case SubscriptionMessageType.UnsubscribedMemberRemoved:
-                {
-                    OnLobbyLeft?.Invoke(Lobby, LobbyLeaveReason.MemberKicked);
-                    Dispose();
-                }
-                    break;
-                case SubscriptionMessageType.UnsubscribedLobbyDeleted:
-                    if (InLobby && !Lobby.IsOwner)
-                    {
-                        OnLobbyLeft?.Invoke(Lobby, LobbyLeaveReason.LobbyClosed);
-                        Dispose();
-                    }
-
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(messageType), messageType, null);
-            }
-        }
-    }
-
-    public enum SubscriptionMessageType
-    {
-        Subscribed,
-        UnsubscribedMemberLeft,
-        UnsubscribedMemberRemoved,
-        UnsubscribedLobbyDeleted,
-    }
-
-    public enum LobbyLeaveReason
-    {
-        MemberLeft,
-        MemberKicked,
-        LobbyClosed,
     }
 }

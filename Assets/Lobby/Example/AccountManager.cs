@@ -1,4 +1,5 @@
 ﻿using System;
+using Lobby;
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
@@ -6,8 +7,6 @@ using Random = UnityEngine.Random;
 
 public class AccountManager : MonoBehaviour
 {
-    public static event Action OnAuthenticated;
-
     private void Start()
     {
         PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
@@ -15,6 +14,17 @@ public class AccountManager : MonoBehaviour
             CustomId = GetDeviceId(),
             CreateAccount = true
         }, OnLoginSuccess, OnLoginFailure);
+
+        void OnLoginFailure(PlayFabError obj)
+        {
+            Debug.LogError(obj.GenerateErrorReport());
+        }
+
+        void OnLoginSuccess(LoginResult obj)
+        {
+            Debug.Log($"Logged in successfully as {obj.PlayFabId}");
+            FindObjectOfType<LobbyController>().Initialise();
+        }
     }
 
     private string GetDeviceId()
@@ -22,14 +32,4 @@ public class AccountManager : MonoBehaviour
         return SystemInfo.deviceUniqueIdentifier + Random.Range(0, 1000);
     }
 
-    private void OnLoginFailure(PlayFabError obj)
-    {
-        Debug.LogError(obj.GenerateErrorReport());
-    }
-
-    private void OnLoginSuccess(LoginResult obj)
-    {
-        Debug.Log($"Logged in successfully as {obj.PlayFabId}");
-        OnAuthenticated?.Invoke();
-    }
 }

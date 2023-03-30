@@ -17,7 +17,7 @@ namespace Lobby.SignalRWrapper
 
         private readonly Action<Message> _onReceiveMessage;
         private readonly Action<SubscriptionChangeMessage> _onReceiveSubscriptionChangeMessage;
-        
+
         private readonly SignalRMessageBroker _messageBroker;
 
         public event Action<string> OnStarted;
@@ -37,6 +37,12 @@ namespace Lobby.SignalRWrapper
 
         private void Negotiate()
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                Debug.LogError("PlayFab client is not logged in");
+                return;
+            }
+
             Debug.Log("Negotiating...");
             var request = new UnityWebRequest(NegotiateUrl, "POST");
             request.downloadHandler = new DownloadHandlerBuffer();
@@ -72,7 +78,8 @@ namespace Lobby.SignalRWrapper
 
 #if UNITY_EDITOR
             _signalR.On<Message>("ReceiveMessage", _messageBroker.OnMessage);
-            _signalR.On<SubscriptionChangeMessage>("ReceiveSubscriptionChangeMessage", _messageBroker.OnSubscriptionChangeMessage);
+            _signalR.On<SubscriptionChangeMessage>("ReceiveSubscriptionChangeMessage",
+                _messageBroker.OnSubscriptionChangeMessage);
 #elif UNITY_WEBGL
             _signalR.On("ReceiveMessage",
                 json =>

@@ -1,7 +1,7 @@
 ﻿using Lobby.SignalRWrapper.Messages;
 using Newtonsoft.Json;
 
-namespace Lobby
+namespace Lobby.LobbyInstance
 {
     public class SignalRLobbyMessageConverter
     {
