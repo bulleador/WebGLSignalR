@@ -173,6 +173,10 @@ namespace Lobby
         private void Dispose()
         {
             Lobby = null;
+        }
+
+        private void OnDestroy()
+        {
             _signalRController.Dispose();
         }
     }
