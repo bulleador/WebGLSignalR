@@ -173,16 +173,13 @@ namespace Lobby.LobbyInstance
             }
             else
             {
+                if (addedOrUpdatedMember.MemberData == null)
+                    return;
+
                 if (member.MemberData == null || !member.MemberData.SequenceEqual(addedOrUpdatedMember.MemberData))
                 {
                     member.MemberData = addedOrUpdatedMember.MemberData;
                     OnLobbyMemberDataChanged?.Invoke(addedOrUpdatedMember);
-                }
-                else
-                {
-                    Debug.LogWarning($"UpdateMember was called for entity " +
-                                     $"{addedOrUpdatedMember.MemberEntity.Id} " +
-                                     $"but member data is the same");
                 }
             }
         }
