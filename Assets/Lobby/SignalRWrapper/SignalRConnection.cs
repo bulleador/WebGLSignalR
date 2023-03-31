@@ -96,7 +96,7 @@ namespace Lobby.SignalRWrapper
 #endif
 
             _signalR.ConnectionStarted += delegate { StartOrRecoverSession(); };
-            _signalR.ConnectionClosed += delegate { OnStopped?.Invoke(); };
+            _signalR.ConnectionClosed += (_, _) => OnStopped?.Invoke(); 
 
             _signalR.Connect();
         }

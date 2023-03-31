@@ -1,5 +1,6 @@
 ﻿using System;
 using Lobby.SignalRWrapper.Messages;
+using UnityEngine;
 
 namespace Lobby.SignalRWrapper
 {
@@ -20,6 +21,7 @@ namespace Lobby.SignalRWrapper
         {
             _signalR.Start();
             _signalR.OnStarted += delegate(string connectionHandle) { onSessionStarted?.Invoke(connectionHandle); };
+            _signalR.OnStopped += delegate { Debug.LogError("SignalR connection stopped!"); };
         }
 
         public void AddMessageHandler(string topic, Action<Message> onMessage)
