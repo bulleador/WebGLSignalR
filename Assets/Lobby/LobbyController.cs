@@ -94,7 +94,7 @@ namespace Lobby
                 EditorGUIUtility.systemCopyBuffer = createLobbyResult.ConnectionString;
 #endif
 
-                CreateAndInitialiseLobbyInstance(createLobbyResult.LobbyId, createLobbyResult.ConnectionString);
+                CreateAndInitialiseLobbyInstance(createLobbyResult.LobbyId, createLobbyResult.ConnectionString, true);
             }
 
             void OnLobbyCreationFailed(PlayFabError error)
@@ -121,7 +121,7 @@ namespace Lobby
             void OnLobbyJoined(JoinLobbyResult joinLobbyResult)
             {
                 Debug.Log($"Lobby joined. Lobby ID: {joinLobbyResult.LobbyId}");
-                CreateAndInitialiseLobbyInstance(joinLobbyResult.LobbyId, connectionString);
+                CreateAndInitialiseLobbyInstance(joinLobbyResult.LobbyId, connectionString, false);
             }
 
             void OnLobbyJoinFailed(PlayFabError error)
@@ -157,10 +157,10 @@ namespace Lobby
             this.OnLobbyLeft?.Invoke(Lobby, LobbyLeaveReason.MemberLeft);
         }
 
-        private void CreateAndInitialiseLobbyInstance(string lobbyId, string connectionString)
+        private void CreateAndInitialiseLobbyInstance(string lobbyId, string connectionString, bool asOwner)
         {
             Lobby = new ObservableLobby(lobbyId, connectionString, _signalRController);
-            Lobby.Initialise(() => { OnLobbyJoined?.Invoke(Lobby, true); },
+            Lobby.Initialise(() => { OnLobbyJoined?.Invoke(Lobby, asOwner); },
                 () => throw new NotImplementedException());
 
             Lobby.OnLobbyLeft += reason =>
