@@ -56,56 +56,35 @@ using Newtonsoft.Json;
 
         public void Init(string url, string accessToken)
         {
-            try
-            {
-                connection = new HubConnectionBuilder()
-                    .WithUrl(url, options =>
-                    {
-                        options.AccessTokenProvider = () => Task.FromResult(accessToken);
-                        options.Transports = HttpTransportType.LongPolling;
-                    })
-                    .Build();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError(ex.Message);
-            }
+            connection = new HubConnectionBuilder()
+                .WithUrl(url, options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                    options.Transports = HttpTransportType.LongPolling;
+                })
+                .Build();
         }
 
         public async void Connect()
         {
-            try
-            {
-                await connection.StartAsync();
+            await connection.StartAsync();
 
-                lastConnectionId = connection.ConnectionId;
+            lastConnectionId = connection.ConnectionId;
 
-                connection.Closed -= OnConnectionClosedEvent;
-                connection.Reconnecting -= OnConnectionReconnectingEvent;
-                connection.Reconnected -= OnConnectionReconnectedEvent;
+            connection.Closed -= OnConnectionClosedEvent;
+            connection.Reconnecting -= OnConnectionReconnectingEvent;
+            connection.Reconnected -= OnConnectionReconnectedEvent;
 
-                connection.Closed += OnConnectionClosedEvent;
-                connection.Reconnecting += OnConnectionReconnectingEvent;
-                connection.Reconnected += OnConnectionReconnectedEvent;
+            connection.Closed += OnConnectionClosedEvent;
+            connection.Reconnecting += OnConnectionReconnectingEvent;
+            connection.Reconnected += OnConnectionReconnectedEvent;
 
-                OnConnectionStarted(lastConnectionId);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError(ex.Message);
-            }
+            OnConnectionStarted(lastConnectionId);
         }
 
         public async void Stop()
         {
-            try
-            {
-                await connection.StopAsync();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-            }
+            await connection.StopAsync();
         }
 
         public async void StartOrRecoverSession(string traceParent, Action<StartOrRecoverSessionResponse> onResponse)

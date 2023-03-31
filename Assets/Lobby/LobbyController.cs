@@ -14,16 +14,16 @@ namespace Lobby
 {
     /// <summary>
     /// This class is responsible for managing the user's presence in a lobby.
-        /// <para>
-            /// Allows the user to create a lobby, join a lobby and leave a lobby,
-            /// but changing the lobby's data is handled by the ObservableLobby class.
-        /// </para>
-        /// <para>
-            /// IMPORTANT: LobbyController has to be initialised before it can be used with <c>Initialise()</c>
-        /// </para>
-        /// <para>
-            /// IMPORTANT 2: <c>PlayFabClient.IsEntityLoggedIn()</c> must be true before <c>Initialise()</c> is called.
-        /// </para>
+    /// <para>
+    /// Allows the user to create a lobby, join a lobby and leave a lobby,
+    /// but changing the lobby's data is handled by the ObservableLobby class.
+    /// </para>
+    /// <para>
+    /// IMPORTANT: LobbyController has to be initialised before it can be used with <c>Initialise()</c>
+    /// </para>
+    /// <para>
+    /// IMPORTANT 2: <c>PlayFabClient.IsEntityLoggedIn()</c> must be true before <c>Initialise()</c> is called.
+    /// </para>
     /// </summary>
     public class LobbyController : MonoBehaviour
     {
@@ -59,7 +59,7 @@ namespace Lobby
             if (_initialised)
                 throw new Exception("Already initialised");
 
-            _signalRController.Initialise(s =>
+            _signalRController.Initialise(() =>
             {
                 _initialised = true;
                 OnInitialised?.Invoke();

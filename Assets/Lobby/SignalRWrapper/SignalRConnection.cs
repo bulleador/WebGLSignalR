@@ -20,7 +20,7 @@ namespace Lobby.SignalRWrapper
 
         private readonly SignalRMessageBroker _messageBroker;
 
-        public event Action<string> OnStarted;
+        public event Action OnStarted;
         public event Action OnStopped;
 
         public string ConnectionHandle { get; private set; }
@@ -96,7 +96,7 @@ namespace Lobby.SignalRWrapper
 #endif
 
             _signalR.ConnectionStarted += delegate { StartOrRecoverSession(); };
-            _signalR.ConnectionClosed += (_, _) => OnStopped?.Invoke(); 
+            _signalR.ConnectionClosed += delegate { OnStopped?.Invoke(); };
 
             _signalR.Connect();
         }
@@ -111,7 +111,7 @@ namespace Lobby.SignalRWrapper
                 {
                     Debug.Log($"Session started or recovered - {response}");
                     ConnectionHandle = response.NewConnectionHandle;
-                    OnStarted?.Invoke(ConnectionHandle);
+                    OnStarted?.Invoke();
                 });
 
 #elif UNITY_WEBGL
@@ -122,7 +122,7 @@ namespace Lobby.SignalRWrapper
                     Debug.Log($"Raw data - {response}");
                     Debug.Log($"Session started or recovered - {responseObj}");
                     ConnectionHandle = responseObj.NewConnectionHandle;
-                    OnStarted?.Invoke(ConnectionHandle);
+                    OnStarted?.Invoke();
                 });
 #endif
         }

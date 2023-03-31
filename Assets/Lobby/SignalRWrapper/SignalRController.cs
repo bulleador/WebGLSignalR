@@ -17,11 +17,11 @@ namespace Lobby.SignalRWrapper
             _signalR = new SignalRConnection(_messageBroker);
         }
 
-        public void Initialise(Action<string> onSessionStarted)
+        public void Initialise(Action onSessionStarted)
         {
             _signalR.Start();
-            _signalR.OnStarted += delegate(string connectionHandle) { onSessionStarted?.Invoke(connectionHandle); };
-            _signalR.OnStopped += delegate { Debug.LogError("SignalR connection stopped!"); };
+            _signalR.OnStarted += () => onSessionStarted?.Invoke();
+            _signalR.OnStopped += () => Debug.LogError("SignalR connection stopped!");
         }
 
         public void AddMessageHandler(string topic, Action<Message> onMessage)
